@@ -12,7 +12,7 @@ export function useNexusData() {
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [activeTab, setActiveTab] = useState('roadmap')
 
   // Wave simulation state
   const [wavePrompt, setWavePrompt] = useState('')

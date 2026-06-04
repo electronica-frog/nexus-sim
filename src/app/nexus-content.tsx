@@ -33,6 +33,7 @@ import {
   Star, Flame,
   Download, BookOpen,
   HeartPulse, Newspaper, History, ScrollText, Brain,
+  Map,
 } from 'lucide-react'
 
 // Extracted modules
@@ -43,6 +44,7 @@ import { AgentCard, LiveAgentCard } from '@/components/nexus/agent-card'
 const WaveDetailDialog = dynamic(() => import('@/components/nexus/wave-detail-dialog').then(m => ({ default: m.WaveDetailDialog })), { ssr: false })
 // Lazy-loaded heavy tabs to reduce compilation memory
 const DashboardTab = dynamic(() => import('@/components/nexus/dashboard-tab').then(m => ({ default: m.DashboardTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
+const RoadmapTab = dynamic(() => import('@/components/nexus/roadmap-tab').then(m => ({ default: m.RoadmapTab })), { loading: () => <div className="h-64 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 
 // ===== Main Component =====
 export default function NexusContent() {
@@ -145,6 +147,7 @@ export default function NexusContent() {
               setActiveTab(v)
             }}>
               <TabsList className="bg-zinc-900 border border-zinc-800 mb-6">
+                <TabsTrigger value="roadmap" className="data-[state=active]:bg-zinc-800"><Map className="h-3.5 w-3.5 mr-1.5" />Roadmap</TabsTrigger>
                 <TabsTrigger value="dashboard" className="data-[state=active]:bg-zinc-800"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Dashboard</TabsTrigger>
                 <TabsTrigger value="agents" className="data-[state=active]:bg-zinc-800"><Users className="h-3.5 w-3.5 mr-1.5" />Agentes</TabsTrigger>
                 <TabsTrigger value="waves" className="data-[state=active]:bg-zinc-800"><Waves className="h-3.5 w-3.5 mr-1.5" />Oleadas</TabsTrigger>
@@ -152,6 +155,11 @@ export default function NexusContent() {
                 <TabsTrigger value="specs" className="data-[state=active]:bg-zinc-800"><ClipboardList className="h-3.5 w-3.5 mr-1.5" />Specs</TabsTrigger>
                 <TabsTrigger value="proposals" className="data-[state=active]:bg-zinc-800"><Target className="h-3.5 w-3.5 mr-1.5" />Propuestas</TabsTrigger>
               </TabsList>
+
+              {/* ===== ROADMAP TAB ===== */}
+              <TabsContent value="roadmap" className="space-y-6">
+                <RoadmapTab />
+              </TabsContent>
 
               {/* ===== DASHBOARD TAB ===== */}
               <TabsContent value="dashboard" className="space-y-6">

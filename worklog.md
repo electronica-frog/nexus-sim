@@ -641,3 +641,37 @@ Stage Summary:
 - Container has aggressive process killer for user 'z' processes (~60s idle timeout)
 - Production build with `--max-old-space-size=256` reduces memory pressure
 - App loads correctly: HTML shell with "Cargando NEXUS Sim..." → client hydration loads full UI
+
+---
+Task ID: 19
+Agent: Main Agent
+Task: Agregar Roadmap Tab con plan completo de desarrollo hasta botardo-os
+
+Work Log:
+- Created `/home/z/my-project/src/components/nexus/roadmap-tab.tsx` (RoadmapTab component, ~300 lines):
+  - Full phased roadmap with 6 phases: Inmediata, Corto Plazo, Mediano Plazo, Largo Plazo, Fase Final: Botardo-OS
+  - 14 roadmap items total with status tracking (done, in-progress, pending, future)
+  - Each item has: icon, title, description, tech stack badge, detailed notes
+  - Progress bar showing overall roadmap completion percentage
+  - "Ya Construido" section listing all 15 completed features from 18 phases
+  - Color-coded phases: red (inmediata), amber (corto plazo), cyan (mediano plazo), purple (largo plazo), emerald (fase final)
+  - Framer Motion animations for phase cards and feature badges
+  - Dark theme consistent with existing UI (bg-zinc-900, border-zinc-800)
+  - Footer note mentioning botardo-os as final destination
+- Updated `/home/z/my-project/src/app/nexus-content.tsx`:
+  - Added `Map` icon to lucide-react imports
+  - Added `RoadmapTab` as dynamic import with ssr: false
+  - Added "Roadmap" tab trigger as FIRST tab in TabsList
+  - Added `<TabsContent value="roadmap">` as first tab content
+- Updated `/home/z/my-project/src/components/nexus/use-nexus-data.ts`:
+  - Changed default activeTab from 'dashboard' to 'roadmap'
+- Build verified clean (14.4s compilation, all 12 API routes + static pages)
+- Dev server starts and responds HTTP 200
+
+Stage Summary:
+- Roadmap tab added as FIRST visible tab when opening NEXUS Sim
+- Contains complete development plan from OOM fix to botardo-os export
+- 6 phases with 14 items: Inmediata (OOM fix, server), Corto Plazo (ChromaDB, WebSocket, GitHub), Mediano Plazo (Mem0, LangGraph, Docker), Largo Plazo (CrewAI/AutoGen, MCP completo), Fase Final (Evaluacion Auto, Multi-Proyecto, Botardo-OS export)
+- Shows 15 completed features as badges
+- Progress tracking with visual bar
+- Default tab changed to 'roadmap' so plan is visible on first load
