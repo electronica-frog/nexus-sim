@@ -6,6 +6,7 @@ import { updateTrustAfterWave } from '@/lib/trust'
 import { buildMemoryContent, buildMemoryTags, calculateImportance, formatSharedLearnings } from '@/lib/semantic-memory'
 import { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } from '@/lib/skills'
 import { buildSearchIndex, search, computeTFIDFVector, vectorToJson } from '@/lib/vector-search'
+import { addToCollection, getCollectionCount, resetCollection } from '@/lib/chroma-store'
 
 const WAVE_TEMPERATURES: Record<string, number> = {
   brainstorm: 0.9,
@@ -759,8 +760,65 @@ async function handleGetSharedLearnings(request: NextRequest) {
   })
 }
 
-// ===== GET /api/nexus/memory-search - Search memories via TF-IDF vector search =====
-async function handleMemorySearch(request: NextRequest) {
+// ===== ChromaDB Index Handlers =====
+
+async function handleGetChromaIndex() {
+  try {
+    const memoriesCount = getCollectionCount('nexus-memories')
+    const skillsCount = getCollectionCount('nexus-skills')
+    return NextResponse.json({
+      status: 'ok',
+      collections: { 'nexus-memories': memoriesCount, 'nexus-skills': skillsCount },
+      total: memoriesCount + skillsCount,
+    })
+  } catch (error) {
+    return NextResponse.json({ status: 'error', error: String(error) }, { status: 500 })
+  }
+}
+
+async function handlePostChromaIndex(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const projectId = searchParams.get('projectId')
+    const forceReset = searchParams.get('reset') === 'true'
+
+    const memoryWhere: Record<string, unknown> = projectId ? { projectId } : {}
+    const memories = await db.agentMemory.findMany({ where: memoryWhere, orderBy: { createdAt: 'desc' } })
+
+    if (forceReset) {
+      try { resetCollection('nexus-memories') } catch {}
+      try { resetCollection('nexus-skills') } catch {}
+    }
+
+    let memoriesIndexed = 0
+    for (let i = 0; i < memories.length; i += 100) {
+      const batch = memories.slice(i, i + 100)
+      const result = addToCollection('nexus-memories',
+        batch.map(m => m.id), batch.map(m => m.content),
+        batch.map(m => ({ agentId: m.agentId, type: m.type, importance: m.importance, projectId: m.projectId, tags: m.tags, createdAt: m.createdAt.toISOString() }))
+      )
+      memoriesIndexed += result.count
+    }
+
+    const skills = await db.agentSkill.findMany({ where: projectId ? { projectId } : {}, orderBy: { quality: 'desc' } })
+    let skillsIndexed = 0
+    for (let i = 0; i < skills.length; i += 100) {
+      const batch = skills.slice(i, i + 100)
+      const result = addToCollection('nexus-skills',
+        batch.map(s => s.id), batch.map(s => s.description),
+        batch.map(s => ({ agentId: s.agentId, name: s.name, quality: s.quality, timesUsed: s.timesUsed, projectId: s.projectId }))
+      )
+      skillsIndexed += result.count
+    }
+
+    return NextResponse.json({ success: true, memoriesIndexed, skillsIndexed, totalMemories: memories.length, totalSkills: skills.length })
+  } catch (error) {
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 })
+  }
+}
+
+// ===== GET /api/nexus/memory-search - TF-IDF fallback search =====
+async function handleMemorySearchTFIDF(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const projectId = searchParams.get('projectId')
   const q = searchParams.get('q') || ''
@@ -816,6 +874,63 @@ async function handleMemorySearch(request: NextRequest) {
     total: enriched.filter(Boolean).length,
     searchType: 'tfidf',
   })
+}
+
+// ===== GET /api/nexus/memory-search - Search memories via ChromaDB semantic search =====
+async function handleMemorySearch(request: NextRequest) {
+  const { searchParams } = request.nextUrl
+  const projectId = searchParams.get('projectId')
+  const q = searchParams.get('q') || ''
+  const limit = parseInt(searchParams.get('limit') || '20', 10)
+
+  if (!projectId) return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  if (!q || q.length < 2) return NextResponse.json({ error: 'Query mínimo 2 caracteres' }, { status: 400 })
+
+  try {
+    // Try ChromaDB semantic search first
+    const { queryCollection } = await import('@/lib/chroma-store')
+    const results = queryCollection('nexus-memories', [q], limit, { projectId })
+
+    if (results.ids[0] && results.ids[0].length > 0) {
+      // Enrich with agent info from SQLite
+      const enriched = await Promise.all(
+        results.ids[0].map(async (id, idx) => {
+          const memory = await db.agentMemory.findUnique({ where: { id } })
+          if (!memory) return null
+          const agent = await db.agent.findUnique({ where: { id: memory.agentId } })
+          const distance = results.distances[0][idx]
+          // Convert cosine distance to similarity score (0-1, where 1 = identical)
+          const score = 1 - Math.min(distance, 1)
+          return {
+            id: memory.id,
+            agentId: memory.agentId,
+            agentName: agent?.name || 'Desconocido',
+            agentEmoji: agent?.emoji || '🤖',
+            agentDivision: agent?.division || 'unknown',
+            content: results.documents[0][idx] || memory.content,
+            tags: memory.tags.split(',').map((t) => t.trim()),
+            importance: memory.importance,
+            type: memory.type,
+            createdAt: memory.createdAt,
+            score,
+            matchedTerms: [], // semantic search doesn't use term matching
+          }
+        }),
+      )
+      return NextResponse.json({
+        query: q,
+        results: enriched.filter(Boolean),
+        total: enriched.filter(Boolean).length,
+        searchType: 'chromadb-semantic',
+      })
+    }
+
+    // Fallback to TF-IDF if ChromaDB has no data
+    return await handleMemorySearchTFIDF(request)
+  } catch (error) {
+    console.error('ChromaDB search error, falling back to TF-IDF:', error)
+    return await handleMemorySearchTFIDF(request)
+  }
 }
 
 // ===== GET /api/nexus/skills - List all skills with agent info =====
@@ -1167,6 +1282,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (slug && slug[0] === 'skills') {
     return handleGetSkills(request)
   }
+  if (slug && slug[0] === 'chroma-index') {
+    return handleGetChromaIndex()
+  }
   return handleGetState(request)
 }
 
@@ -1174,6 +1292,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { slug } = await params
   const path = slug?.[0]
 
+  if (path === 'chroma-index') return handlePostChromaIndex(request)
   if (path === 'project') return handleCreateProject(request)
   if (path === 'wave') return handleRunWave(request)
   if (path === 'memory') return handleStoreMemory(request)

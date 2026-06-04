@@ -34,10 +34,14 @@ export function useNexusData() {
   const [memorySearchQuery, setMemorySearchQuery] = useState('')
   const [memorySearchResults, setMemorySearchResults] = useState<Array<{
     id: string; agentName: string; agentEmoji: string; agentDivision: string;
-    content: string; tags: string[]; importance: number; type: string; createdAt: string
+    content: string; tags: string[]; importance: number; type: string; createdAt: string;
+    score?: number; matchedTerms?: string[];
   }>>([])
   const [memorySearching, setMemorySearching] = useState(false)
+  const [memorySearchType, setMemorySearchType] = useState<string>('')
   const [showMemorySearch, setShowMemorySearch] = useState(false)
+  const [chromaIndexing, setChromaIndexing] = useState(false)
+  const [chromaStatus, setChromaStatus] = useState<{ memories: number; skills: number } | null>(null)
 
   // SSE Live state
   const [liveAgents, setLiveAgents] = useState<LiveAgentState[]>([])
@@ -156,6 +160,7 @@ export function useNexusData() {
         const data = await res.json()
         if (data.results) {
           setMemorySearchResults(data.results)
+          setMemorySearchType(data.searchType || 'unknown')
         }
       } catch (err) {
         console.error('Error searching memories:', err)
@@ -194,6 +199,36 @@ export function useNexusData() {
       console.error('Error fetching skills:', err)
     }
   }, [project])
+
+  // ChromaDB indexing
+  const fetchChromaStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/nexus/chroma-index')
+      const data = await res.json()
+      if (data.collections) {
+        setChromaStatus({ memories: data.collections['nexus-memories'] || 0, skills: data.collections['nexus-skills'] || 0 })
+      }
+    } catch {}
+  }, [])
+
+  const indexChroma = useCallback(async () => {
+    if (!project) return
+    setChromaIndexing(true)
+    try {
+      const res = await fetch(`/api/nexus/chroma-index?projectId=${project.id}&reset=true`, { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`ChromaDB: ${data.memoriesIndexed} memorias + ${data.skillsIndexed} skills indexados`)
+        await fetchChromaStatus()
+      } else {
+        toast.error(`Error indexing ChromaDB: ${data.error}`)
+      }
+    } catch {
+      toast.error('Error de conexión con ChromaDB')
+    } finally {
+      setChromaIndexing(false)
+    }
+  }, [project, fetchChromaStatus])
 
   const deleteSkill = async (skillId: string) => {
     try {
@@ -289,12 +324,13 @@ export function useNexusData() {
     fetchProject()
   }, [fetchProject])
 
-  // Lazy-load shared learnings when Memory tab is selected
+  // Lazy-load shared learnings + ChromaDB status when Memory tab is selected
   useEffect(() => {
-    if (activeTab === 'memory' && project && sharedLearnings.length === 0) {
-      fetchSharedLearnings()
+    if (activeTab === 'memory' && project) {
+      if (sharedLearnings.length === 0) fetchSharedLearnings()
+      fetchChromaStatus()
     }
-  }, [activeTab, project, sharedLearnings.length, fetchSharedLearnings])
+  }, [activeTab, project, sharedLearnings.length, fetchSharedLearnings, fetchChromaStatus])
 
   // Pre-select agents when wave type changes
   useEffect(() => {
@@ -774,7 +810,8 @@ export function useNexusData() {
     selectedWave, setSelectedWave, dialogWave, setDialogWave,
     sharedLearnings, sharedLearningsExpanded, setSharedLearningsExpanded,
     memorySearchQuery, setMemorySearchQuery, memorySearchResults,
-    memorySearching, showMemorySearch, setShowMemorySearch,
+    memorySearching, memorySearchType, showMemorySearch, setShowMemorySearch,
+    chromaIndexing, chromaStatus, indexChroma, fetchChromaStatus,
     liveAgents, liveComplete, liveSynthesis, liveWaveType,
     runningPipeline, pipelineStep, pipelineAgents, pipelineComplete,
     pipelineSummary,
@@ -803,6 +840,7 @@ export function useNexusData() {
     updateSpecPriority, deleteSpec, createSpecFromWave,
     exportData, fetchBenchMetrics, fetchSkills,
     deleteSkill, handleMemorySearch, toggleBenchSort,
+    indexChroma, fetchChromaStatus,
     getFilteredSortedMetrics,
   }
 }

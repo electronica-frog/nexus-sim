@@ -78,12 +78,12 @@ const ROADMAP_PHASES: RoadmapPhase[] = [
     items: [
       {
         id: 'vector-db',
-        title: 'Busqueda Semantica Vectorial (TF-IDF)',
-        description: 'Reemplazar SQLite LIKE con busqueda vectorial TF-IDF + cosine similarity para memoria de agentes.',
+        title: 'ChromaDB Vector Store (all-MiniLM-L6-v2)',
+        description: 'Busqueda semantica con ChromaDB + embeddings de 384 dimensiones. Reemplaza TF-IDF como motor primario con fallback automatico.',
         status: 'done',
-        tech: 'TF-IDF / Cosine Similarity (pure JS, zero deps)',
+        tech: 'ChromaDB / all-MiniLM-L6-v2 / 384-dim / Cosine Similarity',
         icon: Database,
-        details: 'Sistema vectorial implementado: tokenizador espanol, TF-IDF vectors, cosine similarity. Embeddings almacenados en SQLite como JSON. UI muestra score de similitud y terminos coincidentes.',
+        details: 'ChromaDB PersistentClient con almacenamiento en disco. Modelo all-MiniLM-L6-v2 genera embeddings semánticos de 384 dimensiones. Colecciones: nexus-memories, nexus-skills. Busqueda semántica real (no keyword matching). Fallback automático a TF-IDF si ChromaDB no tiene datos indexados.',
       },
       {
         id: 'websocket',

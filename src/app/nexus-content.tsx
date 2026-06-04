@@ -41,7 +41,8 @@ export default function NexusContent() {
     selectedWave, setSelectedWave, dialogWave, setDialogWave,
     sharedLearnings, sharedLearningsExpanded, setSharedLearningsExpanded,
     memorySearchQuery, setMemorySearchQuery, memorySearchResults,
-    memorySearching, showMemorySearch, setShowMemorySearch,
+    memorySearching, memorySearchType, showMemorySearch, setShowMemorySearch,
+    chromaIndexing, chromaStatus, indexChroma,
     liveAgents, liveComplete, liveSynthesis,
     runningPipeline, pipelineStep, pipelineComplete,
     benchMetrics, benchAggregates, benchLoading, benchDivisionFilter,
@@ -236,6 +237,7 @@ export default function NexusContent() {
                   setMemorySearchQuery={setMemorySearchQuery}
                   memorySearchResults={memorySearchResults}
                   memorySearching={memorySearching}
+                  memorySearchType={memorySearchType}
                   showMemorySearch={showMemorySearch}
                   setShowMemorySearch={setShowMemorySearch}
                   memoryAgentFilter={memoryAgentFilter}
@@ -243,6 +245,9 @@ export default function NexusContent() {
                   divisions={divisions}
                   filteredMemories={filteredMemories}
                   handleMemorySearch={handleMemorySearch}
+                  chromaIndexing={chromaIndexing}
+                  chromaStatus={chromaStatus}
+                  indexChroma={indexChroma}
                 />
               </TabsContent>
 

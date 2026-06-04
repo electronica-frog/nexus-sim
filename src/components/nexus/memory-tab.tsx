@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Brain, FileText, Filter, Loader2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import { Search, Brain, FileText, Filter, Loader2, ChevronDown, ChevronUp, Sparkles, Database, RefreshCw } from 'lucide-react'
 import { WAVE_COLOR_MAP, MEMORY_TYPE_COLORS } from '@/components/nexus/constants'
 import type { Project, AgentMemory, SharedLearning, MemorySearchResult } from '@/components/nexus/types'
 
@@ -21,6 +21,7 @@ interface MemoryTabProps {
   setMemorySearchQuery: (v: string) => void
   memorySearchResults: MemorySearchResult[]
   memorySearching: boolean
+  memorySearchType: string
   showMemorySearch: boolean
   setShowMemorySearch: (v: boolean) => void
   memoryAgentFilter: string
@@ -28,6 +29,9 @@ interface MemoryTabProps {
   divisions: string[]
   filteredMemories: AgentMemory[]
   handleMemorySearch: (q: string) => void
+  chromaIndexing: boolean
+  chromaStatus: { memories: number; skills: number } | null
+  indexChroma: () => void
 }
 
 export function MemoryTab({
@@ -39,6 +43,7 @@ export function MemoryTab({
   setMemorySearchQuery,
   memorySearchResults,
   memorySearching,
+  memorySearchType,
   showMemorySearch,
   setShowMemorySearch,
   memoryAgentFilter,
@@ -46,6 +51,9 @@ export function MemoryTab({
   divisions,
   filteredMemories,
   handleMemorySearch,
+  chromaIndexing,
+  chromaStatus,
+  indexChroma,
 }: MemoryTabProps) {
   return (
     <>
@@ -136,8 +144,17 @@ export function MemoryTab({
             <ScrollArea className="max-h-64 mt-2">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 mb-1 px-0.5">
-                  <Sparkles className="h-3 w-3 text-violet-400" />
-                  <span className="text-[9px] font-medium text-violet-400">Búsqueda semántica TF-IDF</span>
+                  {memorySearchType === 'chromadb-semantic' ? (
+                    <>
+                      <Database className="h-3 w-3 text-emerald-400" />
+                      <span className="text-[9px] font-medium text-emerald-400">Búsqueda semántica ChromaDB (all-MiniLM-L6-v2)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 text-violet-400" />
+                      <span className="text-[9px] font-medium text-violet-400">Búsqueda semántica TF-IDF (fallback)</span>
+                    </>
+                  )}
                 </div>
                 {memorySearchResults.map((r) => (
                   <div key={r.id} className="p-2 rounded-lg bg-zinc-800/50 border border-zinc-800 hover:border-zinc-700 transition-colors">
@@ -174,6 +191,43 @@ export function MemoryTab({
           )}
           {memorySearchQuery.length >= 2 && !memorySearching && memorySearchResults.length === 0 && (
             <p className="text-[10px] text-zinc-500 mt-2 text-center">Sin resultados para &quot;{memorySearchQuery}&quot;</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ChromaDB Index Status & Action */}
+      <Card className="bg-zinc-900/50 border-zinc-800">
+        <CardContent className="p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Database className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="text-xs font-medium text-zinc-300">ChromaDB Vector Store</span>
+              {chromaStatus && (
+                <Badge variant="outline" className="border-emerald-700 text-emerald-400 text-[9px]">
+                  {chromaStatus.memories + chromaStatus.skills} docs
+                </Badge>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[10px] border-zinc-700 text-zinc-300 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-700"
+              onClick={indexChroma}
+              disabled={chromaIndexing}
+            >
+              {chromaIndexing ? <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Indexando...</> : <><RefreshCw className="h-3 w-3 mr-1" />Indexar Datos</>}
+            </Button>
+          </div>
+          {chromaStatus && (
+            <div className="flex items-center gap-3 mt-2 text-[9px] text-zinc-500">
+              <span>{chromaStatus.memories} memorias</span>
+              <span>·</span>
+              <span>{chromaStatus.skills} skills</span>
+              <span>·</span>
+              <span>384-dim embeddings</span>
+              <span>·</span>
+              <span>cosine similarity</span>
+            </div>
           )}
         </CardContent>
       </Card>
