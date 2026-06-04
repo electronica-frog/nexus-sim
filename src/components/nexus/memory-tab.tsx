@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Brain, FileText, Filter, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Brain, FileText, Filter, Loader2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 import { WAVE_COLOR_MAP, MEMORY_TYPE_COLORS } from '@/components/nexus/constants'
 import type { Project, AgentMemory, SharedLearning, MemorySearchResult } from '@/components/nexus/types'
 
@@ -133,16 +133,40 @@ export function MemoryTab({
             </Button>
           </div>
           {memorySearchResults.length > 0 && (
-            <ScrollArea className="max-h-48 mt-2">
+            <ScrollArea className="max-h-64 mt-2">
               <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 mb-1 px-0.5">
+                  <Sparkles className="h-3 w-3 text-violet-400" />
+                  <span className="text-[9px] font-medium text-violet-400">Búsqueda semántica TF-IDF</span>
+                </div>
                 {memorySearchResults.map((r) => (
-                  <div key={r.id} className="p-2 rounded-lg bg-zinc-800/50 border border-zinc-800">
+                  <div key={r.id} className="p-2 rounded-lg bg-zinc-800/50 border border-zinc-800 hover:border-zinc-700 transition-colors">
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-xs">{r.agentEmoji}</span>
                       <span className="text-[10px] font-medium text-zinc-300">{r.agentName}</span>
                       <Badge className="text-[9px] px-1">{r.type}</Badge>
+                      {r.score !== undefined && (
+                        <div className="flex items-center gap-1 ml-auto">
+                          <div className="w-12 h-1.5 rounded-full bg-zinc-700 overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-violet-500 to-emerald-400"
+                              style={{ width: `${Math.min(100, Math.round(r.score * 100))}%` }}
+                            />
+                          </div>
+                          <span className="text-[9px] text-zinc-400 font-medium w-7 text-right">
+                            {Math.round(r.score * 100)}%
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <p className="text-[10px] text-zinc-300 line-clamp-2">{r.content.slice(0, 150)}</p>
+                    {r.matchedTerms && r.matchedTerms.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {r.matchedTerms.map((term) => (
+                          <Badge key={term} variant="outline" className="border-violet-700/50 text-violet-400 text-[8px] px-1.5 py-0">{term}</Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

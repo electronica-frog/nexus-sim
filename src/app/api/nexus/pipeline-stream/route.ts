@@ -5,6 +5,8 @@ import { updateTrustAfterWave } from '@/lib/trust'
 import { buildMemoryContent, buildMemoryTags, calculateImportance, formatSharedLearnings } from '@/lib/semantic-memory'
 import { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } from '@/lib/skills'
 import { addLog } from '@/lib/system-logs'
+import { computeTFIDFVector, vectorToJson } from '@/lib/vector-search'
+import { emitWaveStarted, emitWaveAgentResponding, emitWaveCompleted, emitPipelineStarted, emitPipelineStepCompleted, emitPipelineCompleted } from '@/lib/event-bus'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 600 // 10 minutes for 5-step pipeline
@@ -159,6 +161,9 @@ async function runSingleWave(
         ? `${prompt}\n\n[Contexto de oleadas anteriores del pipeline]:\n${extraContext}`
         : prompt
 
+      // Emit broadcast event: agent responding in pipeline
+      emitWaveAgentResponding({ waveId: '', agentName: pa.agent.name, agentEmoji: pa.agent.emoji, projectId })
+
       const llmData = await callLLM({
         agentName: pa.agent.name,
         agentPersonality: pa.agent.personality.slice(0, 2000),
@@ -186,19 +191,20 @@ async function runSingleWave(
       await boostSkillQuality(projectId, pa.agentId, llmData.confidence, llmData.mood).catch(() => {})
 
       // Enhanced semantic memory — captures actual insight
+      const memoryContent = buildMemoryContent({
+        waveType: `pipeline-${type}`,
+        waveNumber,
+        confidence: llmData.confidence,
+        mood: llmData.mood,
+        responseContent: llmData.content,
+        prompt,
+      })
       await db.agentMemory.create({
         data: {
           projectId,
           agentId: pa.agentId,
           type: 'learning',
-          content: buildMemoryContent({
-            waveType: `pipeline-${type}`,
-            waveNumber,
-            confidence: llmData.confidence,
-            mood: llmData.mood,
-            responseContent: llmData.content,
-            prompt,
-          }),
+          content: memoryContent,
           tags: buildMemoryTags({
             waveType: type,
             waveNumber,
@@ -210,6 +216,7 @@ async function runSingleWave(
             mood: llmData.mood,
             responseLength: llmData.content.length,
           }),
+          embedding: JSON.stringify(vectorToJson(computeTFIDFVector(memoryContent))),
         },
       })
 
@@ -332,6 +339,9 @@ export async function POST(request: NextRequest) {
 
         await addLog(projectId, 'pipeline_started', 'Pipeline de 5 pasos iniciado', { prompt: prompt.slice(0, 100) })
 
+        // Emit broadcast event for multi-user collaboration
+        emitPipelineStarted({ steps: [...steps], projectId })
+
         let previousSynthesis: string | null = null
         let allResponsesCount = 0
 
@@ -357,10 +367,16 @@ export async function POST(request: NextRequest) {
             type,
             responsesCount: responses.length,
           })))
+
+          // Emit broadcast event: pipeline step completed
+          emitPipelineStepCompleted({ step: type, stepIndex: stepIdx, projectId })
         }
 
         // Generate executive summary
         await addLog(projectId, 'pipeline_completed', `Pipeline completado con ${allResponsesCount} respuestas totales`, { totalResponses: allResponsesCount })
+
+        // Emit broadcast event for multi-user collaboration
+        emitPipelineCompleted({ totalSteps: 5, projectId })
 
         const executiveSummary = previousSynthesis
           ? `## Resumen Ejecutivo del Pipeline (5 Pasos)\n\n` +

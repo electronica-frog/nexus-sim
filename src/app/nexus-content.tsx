@@ -52,6 +52,7 @@ export default function NexusContent() {
     selectedSpec, setSelectedSpec, waveSpecLink, setWaveSpecLink,
     agentSkills,
     dashboard, systemHealth, activityLogs, waveStats,
+    liveConnected, connectionCount,
     divisions, filteredAgents, filteredMemories,
     avgConfidence, moodCounts, topTrustedAgents, avgTrust,
     handleSeed, toggleAgent,
@@ -172,6 +173,8 @@ export default function NexusContent() {
                   setSelectedWave={setSelectedWave}
                   toggleBenchSort={toggleBenchSort}
                   getFilteredSortedMetrics={getFilteredSortedMetrics}
+                  liveConnected={liveConnected}
+                  connectionCount={connectionCount}
                 />
               </TabsContent>
 

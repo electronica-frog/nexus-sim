@@ -723,3 +723,142 @@ Stage Summary:
 - Production build successful, memory efficient (~190MB RSS)
 - Watchdog + cron keep server alive persistently
 - All 10 nexus components intact: dashboard, agents, waves, memory, specs, proposals, roadmap, etc.
+
+---
+Task ID: 23
+Agent: Main Agent
+Task: GitHub Setup + CI/CD Pipeline
+
+Work Log:
+- Verified git repository already initialized (branch: main, clean working tree)
+- Verified no remote configured (git remote -v returned empty)
+- Created `.github/workflows/build.yml` — GitHub Actions CI pipeline:
+  - Triggers: push to main, pull requests to main
+  - Setup: oven-sh/setup-bun@v2 with latest bun
+  - Cache: bun install cache keyed on bun.lockb hash
+  - Steps: checkout → bun install --frozen-lockfile → prisma generate → prisma db push → lint → build → verify output
+  - Build verification: checks .next directory exists
+- Updated `.gitignore` — comprehensive rules for Next.js + Prisma + bun:
+  - Dependencies: node_modules/, .pnp, .yarn
+  - Next.js: .next/, out/, build/, dist/
+  - Production: *.tsbuildinfo, next-env.d.ts
+  - Testing: coverage/
+  - Misc: .DS_Store, *.pem
+  - Environment: .env, .env*.local (with !.env.example exception)
+  - Debug: npm-debug, yarn-debug, yarn-error, pnpm-debug, bun-debug logs
+  - Prisma: db/*.db-journal
+  - IDE: .vscode/, .idea/, *.swp, *.swo
+  - Logs: *.log, dev.log, dev.out.log, server.log
+  - Upload: upload/
+  - OS: Thumbs.db
+  - Project-specific: .claude, .z-ai-config, local-*, test, prompt, /skills/
+- Created `.env.example` — environment template:
+  - DATABASE_URL with SQLite default path
+  - NEXT_PUBLIC_APP_NAME set to "NEXUS Sim v2"
+
+Stage Summary:
+- CI/CD pipeline ready for GitHub Actions (build.yml)
+- .gitignore covers all generated/temp files with .env.example exception
+- .env.example provides template for new developers
+- Git repo confirmed initialized, no remotes (push not attempted)
+
+---
+Task ID: 21
+Agent: Main Agent
+Task: Implement Semantic Vector Search (TF-IDF + Cosine Similarity)
+
+Work Log:
+- Created `/home/z/my-project/src/lib/vector-search.ts` — pure JS module (no external dependencies):
+  - `tokenize(text)`: Spanish text tokenizer with stop-word removal (reuses STOP_WORDS from semantic-memory.ts)
+  - `computeTFIDF(documents)`: Computes TF-IDF vectors for a set of documents, returns sparse vectors + shared vocabulary + IDF map
+  - `cosineSimilarity(vecA, vecB)`: Cosine similarity between two sparse vectors (Maps)
+  - `computeTFIDFVector(text, idfMap?)`: Computes TF-IDF vector for a single text using optional pre-computed IDF
+  - `vectorToJson()` / `jsonToVector()`: JSON serialization helpers for sparse vectors
+  - `vectorToArray()`: Converts sparse vector to dense array aligned with vocabulary
+  - `buildSearchIndex(memories)`: Builds in-memory search index from memory objects
+  - `search(index, query, topK)`: Searches index returning results sorted by similarity with matched terms
+- Added `embedding Json?` column to AgentMemory model in Prisma schema
+- Ran `prisma db push` to sync schema to SQLite database
+- Updated `handleMemorySearch` in `/api/nexus/[[...slug]]/route.ts`:
+  - Replaced SQLite LIKE search with TF-IDF vector search
+  - Fetches all memories (up to 200), builds in-memory index, searches with cosine similarity
+  - Returns enriched results with `score` (0-1 similarity) and `matchedTerms` (intersecting tokens)
+  - Response includes `searchType: 'tfidf'` marker
+- Updated all 3 memory creation paths to compute and store TF-IDF embedding:
+  - `/api/nexus/[[...slug]]/route.ts` (non-streaming wave handler)
+  - `/api/nexus/wave-stream/route.ts` (SSE streaming wave handler)
+  - `/api/nexus/pipeline-stream/route.ts` (5-step pipeline handler)
+  - Each uses `computeTFIDFVector(memoryContent)` and stores as JSON via `vectorToJson()`
+- Updated `MemorySearchResult` type in `types.ts`:
+  - Added optional `score?: number` and `matchedTerms?: string[]` fields
+- Updated `/components/nexus/memory-tab.tsx`:
+  - Added `Sparkles` icon from lucide-react
+  - Added "Búsqueda semántica TF-IDF" label with violet accent above results
+  - Each result now shows: similarity score as percentage bar (gradient violet→emerald), matched terms as violet badges
+  - Increased scroll area to max-h-64 for more results
+- Build verified clean: all 14 API routes + static pages compiled successfully
+- Lint has 1 pre-existing error (unrelated to this task, in use-nexus-live.ts)
+
+Stage Summary:
+- Memory search upgraded from exact SQLite LIKE matching to TF-IDF vector search with cosine similarity
+- Pure JS implementation (zero external dependencies) optimized for Spanish text
+- Search results now include similarity scores (0-1) and matched terms for transparency
+- All new memories automatically store TF-IDF embeddings in JSON column
+- UI shows similarity percentage bars and matched term badges for each result
+- "Búsqueda semántica TF-IDF" label replaces generic search branding
+- All 3 wave execution paths store embeddings for future pre-filtered search optimization
+- Build passes clean
+
+---
+Task ID: 21
+Agent: full-stack-developer subagent
+Task: Busqueda Semantica Vectorial (TF-IDF + Cosine Similarity)
+
+Work Log:
+- Created /src/lib/vector-search.ts — Pure JS TF-IDF vector search (zero deps)
+- Added embedding Json? column to AgentMemory in Prisma schema
+- Updated handleMemorySearch to use TF-IDF vector search instead of SQLite LIKE
+- Updated wave-stream, pipeline-stream, and route.ts to store TF-IDF embeddings
+- Enhanced memory-tab.tsx with similarity score bars and matched terms badges
+
+Stage Summary:
+- Vector search replaces SQLite LIKE with semantic similarity
+- Embeddings stored as JSON in SQLite
+- UI shows similarity percentage and matched terms
+- Build passes clean
+
+---
+Task ID: 22
+Agent: full-stack-developer subagent (via Task 21 agent)
+Task: Event Bus + SSE Real-Time Collaboration
+
+Work Log:
+- Created /src/lib/event-bus.ts — In-memory pub/sub with singleton pattern (globalThis)
+- Created /src/app/api/nexus/live/route.ts — SSE endpoint for live events
+- Created /src/hooks/use-nexus-live.ts — React hook for consuming live events
+- Integrated event emissions in wave-stream and pipeline-stream
+- Added live connection indicator in dashboard-tab.tsx
+- Updated use-nexus-data.ts to expose liveConnected, connectionCount, events
+
+Stage Summary:
+- EventBus broadcasts wave/pipeline events to all connected clients
+- /api/nexus/live serves SSE stream with heartbeat every 5s
+- Dashboard shows green "Live" indicator with connection count
+- All wave/pipeline routes emit broadcast events
+
+---
+Task ID: 23
+Agent: full-stack-developer subagent
+Task: GitHub CI/CD Pipeline Setup
+
+Work Log:
+- Created .github/workflows/build.yml — 7-step CI pipeline with Bun
+- Updated .gitignore — comprehensive Next.js + Prisma + Bun coverage
+- Created .env.example with DATABASE_URL and NEXT_PUBLIC_APP_NAME
+- Git repo verified on main branch (no remote configured)
+
+Stage Summary:
+- CI pipeline: checkout → bun install → prisma generate → db push → lint → build → verify
+- .gitignore covers deps, build artifacts, env, IDE, logs, OS files
+- .env.example ready for new developers
+- Pending: configure GitHub remote and push

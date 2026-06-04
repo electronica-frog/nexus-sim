@@ -5,6 +5,7 @@ import ZAI from 'z-ai-web-dev-sdk'
 import { updateTrustAfterWave } from '@/lib/trust'
 import { buildMemoryContent, buildMemoryTags, calculateImportance, formatSharedLearnings } from '@/lib/semantic-memory'
 import { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } from '@/lib/skills'
+import { buildSearchIndex, search, computeTFIDFVector, vectorToJson } from '@/lib/vector-search'
 
 const WAVE_TEMPERATURES: Record<string, number> = {
   brainstorm: 0.9,
@@ -429,19 +430,20 @@ async function handleRunWave(request: NextRequest) {
       await boostSkillQuality(projectId, pa.agentId, llmData.confidence, llmData.mood).catch(() => {})
 
       // Enhanced semantic memory — captures actual insight
+      const memoryContent = buildMemoryContent({
+        waveType: type,
+        waveNumber,
+        confidence: llmData.confidence,
+        mood: llmData.mood,
+        responseContent: llmData.content,
+        prompt,
+      })
       await db.agentMemory.create({
         data: {
           projectId,
           agentId: pa.agentId,
           type: 'learning',
-          content: buildMemoryContent({
-            waveType: type,
-            waveNumber,
-            confidence: llmData.confidence,
-            mood: llmData.mood,
-            responseContent: llmData.content,
-            prompt,
-          }),
+          content: memoryContent,
           tags: buildMemoryTags({
             waveType: type,
             waveNumber,
@@ -453,6 +455,7 @@ async function handleRunWave(request: NextRequest) {
             mood: llmData.mood,
             responseLength: llmData.content.length,
           }),
+          embedding: JSON.stringify(vectorToJson(computeTFIDFVector(memoryContent))),
         },
       })
 
@@ -756,7 +759,7 @@ async function handleGetSharedLearnings(request: NextRequest) {
   })
 }
 
-// ===== GET /api/nexus/memory-search - Search memories by keyword =====
+// ===== GET /api/nexus/memory-search - Search memories via TF-IDF vector search =====
 async function handleMemorySearch(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const projectId = searchParams.get('projectId')
@@ -771,39 +774,47 @@ async function handleMemorySearch(request: NextRequest) {
     return NextResponse.json({ error: 'Se requiere query de búsqueda (mínimo 2 caracteres)' }, { status: 400 })
   }
 
-  // SQLite LIKE search (case-insensitive via Prisma contains)
+  // Fetch all memories for the project (up to 200) for vector search
   const memories = await db.agentMemory.findMany({
-    where: {
-      projectId,
-      content: { contains: q },
-    },
+    where: { projectId },
     orderBy: { importance: 'desc' },
-    take: limit,
+    take: 200,
   })
 
-  // Enrich with agent info
+  // Build in-memory search index from all memories
+  const index = buildSearchIndex(memories.map((m) => ({ id: m.id, content: m.content })))
+
+  // Search using TF-IDF + cosine similarity
+  const searchResults = search(index, q, limit)
+
+  // Enrich results with agent info
   const enriched = await Promise.all(
-    memories.map(async (m) => {
-      const agent = await db.agent.findUnique({ where: { id: m.agentId } })
+    searchResults.map(async (r) => {
+      const memory = memories.find((m) => m.id === r.id)
+      if (!memory) return null
+      const agent = await db.agent.findUnique({ where: { id: memory.agentId } })
       return {
-        id: m.id,
-        agentId: m.agentId,
+        id: r.id,
+        agentId: memory.agentId,
         agentName: agent?.name || 'Desconocido',
         agentEmoji: agent?.emoji || '🤖',
         agentDivision: agent?.division || 'unknown',
-        content: m.content,
-        tags: m.tags.split(',').map((t) => t.trim()),
-        importance: m.importance,
-        type: m.type,
-        createdAt: m.createdAt,
+        content: r.content,
+        tags: memory.tags.split(',').map((t) => t.trim()),
+        importance: memory.importance,
+        type: memory.type,
+        createdAt: memory.createdAt,
+        score: r.score,
+        matchedTerms: r.matchedTerms,
       }
     }),
   )
 
   return NextResponse.json({
     query: q,
-    results: enriched,
-    total: enriched.length,
+    results: enriched.filter(Boolean),
+    total: enriched.filter(Boolean).length,
+    searchType: 'tfidf',
   })
 }
 

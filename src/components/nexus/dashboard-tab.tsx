@@ -27,6 +27,7 @@ import {
   Star, Flame,
   Download, BookOpen,
   HeartPulse, Newspaper, History, ScrollText, Brain,
+  Wifi, WifiOff,
 } from 'lucide-react'
 import { WAVE_TYPES, WAVE_COLOR_MAP, WAVE_DOT_COLOR, MOOD_CONFIG, DIVISION_COLORS, TRUST_COLOR, TRUST_BAR_COLOR, TRUST_LABEL } from '@/components/nexus/constants'
 import { StatCard } from '@/components/nexus/stat-card'
@@ -57,6 +58,8 @@ interface DashboardTabProps {
   setSelectedWave: (w: Wave | null) => void
   toggleBenchSort: (field: keyof BenchAgentMetric) => void
   getFilteredSortedMetrics: () => BenchAgentMetric[]
+  liveConnected?: boolean
+  connectionCount?: number
 }
 
 export function DashboardTab({
@@ -67,6 +70,8 @@ export function DashboardTab({
   benchSelectedAgent, setBenchSelectedAgent,
   divisions, setActiveTab, setWaveType, fetchBenchMetrics,
   exportData, setSelectedWave, toggleBenchSort, getFilteredSortedMetrics,
+  liveConnected = false,
+  connectionCount = 0,
 }: DashboardTabProps) {
   const systemHealth = dashboard
   const activityLogs = dashboard?.activityLogs ?? []
@@ -80,6 +85,35 @@ export function DashboardTab({
         <StatCard icon={Waves} label="Oleadas" value={project.waves.length} color="text-amber-400" />
         <StatCard icon={Target} label="Propuestas" value={project.proposals.length} color="text-purple-400" />
         <StatCard icon={FileText} label="Memorias" value={project.memories.length} color="text-emerald-400" />
+      </div>
+
+      {/* Live Connection Indicator */}
+      <div className="flex items-center justify-center">
+        <Badge
+          variant="outline"
+          className={
+            liveConnected
+              ? 'border-emerald-700/60 bg-emerald-950/30 text-emerald-300 text-xs gap-1.5'
+              : 'border-red-700/60 bg-red-950/20 text-red-400 text-xs gap-1.5'
+          }
+        >
+          {liveConnected ? (
+            <>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <Wifi className="h-3 w-3" />
+              En vivo
+              <span className="text-emerald-400 font-medium">{connectionCount} conectado{connectionCount !== 1 ? 's' : ''}</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="h-3 w-3" />
+              Desconectado
+            </>
+          )}
+        </Badge>
       </div>
 
       {/* Salud del Sistema */}

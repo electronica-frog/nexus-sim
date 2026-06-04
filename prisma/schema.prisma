@@ -114,6 +114,7 @@ model AgentMemory {
   content     String
   tags        String   @default("") // comma-separated tags
   importance  Float    @default(0.5) // 0-1
+  embedding   Json?    // TF-IDF vector stored as JSON object
 
   project     Project  @relation(fields: [projectId], references: [id])
 

@@ -7,6 +7,7 @@ import type {
   AgentSkill, Agent, DashboardData,
 } from './types'
 import { SPEC_PHASE_CONFIG, SPEC_PRIORITY_CONFIG } from './constants'
+import { useNexusLive } from '@/hooks/use-nexus-live'
 
 export function useNexusData() {
   const [project, setProject] = useState<Project | null>(null)
@@ -74,6 +75,9 @@ export function useNexusData() {
 
   // Consolidated dashboard state
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+
+  // Real-time live connection
+  const live = useNexusLive(project?.id)
 
   // Derived views from dashboard for backward compatibility in JSX
   const systemHealth = dashboard
@@ -782,6 +786,11 @@ export function useNexusData() {
     selectedSpec, setSelectedSpec, waveSpecLink, setWaveSpecLink,
     agentSkills,
     dashboard, systemHealth, activityLogs, waveStats,
+    liveConnected: live.connected,
+    connectionCount: live.connectionCount,
+    lastLiveEvent: live.lastEvent,
+    liveEvents: live.events,
+    clearLiveEvents: live.clearEvents,
 
     // Derived
     divisions, filteredAgents, filteredMemories,

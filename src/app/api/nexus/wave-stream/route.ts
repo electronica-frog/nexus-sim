@@ -5,6 +5,8 @@ import { updateTrustAfterWave } from '@/lib/trust'
 import { buildMemoryContent, buildMemoryTags, calculateImportance, formatSharedLearnings } from '@/lib/semantic-memory'
 import { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } from '@/lib/skills'
 import { addLog } from '@/lib/system-logs'
+import { computeTFIDFVector, vectorToJson } from '@/lib/vector-search'
+import { emitWaveStarted, emitWaveAgentResponding, emitWaveCompleted } from '@/lib/event-bus'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes for LLM calls
@@ -89,6 +91,9 @@ export async function POST(request: NextRequest) {
 
         await addLog(projectId, 'wave_created', `Oleada #${waveNumber} (${type}) creada con ${projectAgents.length} agentes`, { waveId: wave.id, waveNumber, type, agentCount: projectAgents.length })
 
+        // Emit broadcast event for multi-user collaboration
+        emitWaveStarted({ waveId: wave.id, type, prompt, projectId })
+
         for (const pa of projectAgents) {
           await db.projectAgent.update({
             where: { id: pa.id },
@@ -172,6 +177,9 @@ export async function POST(request: NextRequest) {
               await markSkillsAsUsed(skillIds).catch(() => {})
             }
 
+            // Emit broadcast event: agent responding
+            emitWaveAgentResponding({ waveId: wave.id, agentName: pa.agent.name, agentEmoji: pa.agent.emoji, projectId })
+
             // Send heartbeat before LLM call to keep SSE connection alive
             controller.enqueue(encoder.encode(sseHeartbeat()))
 
@@ -216,19 +224,20 @@ export async function POST(request: NextRequest) {
             await boostSkillQuality(projectId, pa.agentId, llmData.confidence, llmData.mood).catch(() => {})
 
             // Enhanced semantic memory — captures actual insight, not just metadata
+            const memoryContent = buildMemoryContent({
+              waveType: type,
+              waveNumber,
+              confidence: llmData.confidence,
+              mood: llmData.mood,
+              responseContent: llmData.content,
+              prompt,
+            })
             await db.agentMemory.create({
               data: {
                 projectId,
                 agentId: pa.agentId,
                 type: 'learning',
-                content: buildMemoryContent({
-                  waveType: type,
-                  waveNumber,
-                  confidence: llmData.confidence,
-                  mood: llmData.mood,
-                  responseContent: llmData.content,
-                  prompt,
-                }),
+                content: memoryContent,
                 tags: buildMemoryTags({
                   waveType: type,
                   waveNumber,
@@ -240,6 +249,7 @@ export async function POST(request: NextRequest) {
                   mood: llmData.mood,
                   responseLength: llmData.content.length,
                 }),
+                embedding: JSON.stringify(vectorToJson(computeTFIDFVector(memoryContent))),
               },
             })
 
@@ -325,6 +335,9 @@ export async function POST(request: NextRequest) {
         await updateTrustAfterWave(wave.id, projectId)
 
         await addLog(projectId, 'wave_completed', `Oleada #${waveNumber} (${type}) completada con ${responses.length} respuestas`, { waveNumber, type, responseCount: responses.length })
+
+        // Emit broadcast event for multi-user collaboration
+        emitWaveCompleted({ waveId: wave.id, type, responseCount: responses.length, projectId })
 
         // For synthesize waves, generate a trust-weighted synthesis
         let result = null

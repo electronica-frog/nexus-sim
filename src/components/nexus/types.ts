@@ -169,6 +169,8 @@ export interface MemorySearchResult {
   importance: number
   type: string
   createdAt: string
+  score?: number
+  matchedTerms?: string[]
 }
 
 export interface DashboardData {
