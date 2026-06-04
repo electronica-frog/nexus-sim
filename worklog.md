@@ -702,3 +702,24 @@ Stage Summary:
 - Server compiles and serves in under 5 seconds
 - Caddy proxy working, keepalive prevents idle kill
 - OOM issue should be resolved — no single file exceeds ~400 lines
+
+---
+Task ID: 20
+Agent: main
+Task: Fix NEXUS Sim not visible in Discord chat - server persistent + Caddy proxy
+
+Work Log:
+- Diagnosed: Caddy running on port 81 but Next.js server NOT running (port 3000 dead)
+- Root cause: Next.js processes die between tool calls (sandbox cleanup)
+- Solution: Production build (next build succeeded in 8.8s) + watchdog script
+- Created watchdog.sh: monitors port 3000, restarts next start if down
+- Created cron #185499: safety net every 5 minutes to check/restart server
+- Verified: Caddy :81 → HTTP 200 (10008 bytes), static assets work (CSS, JS)
+- App renders "Cargando NEXUS Sim..." loading state, hydrates client-side
+- No code deleted - only modularized into components (page.tsx = 5 lines, nexus-content.tsx = 300 lines)
+
+Stage Summary:
+- NEXUS Sim accessible via Caddy port 81 in Discord chat
+- Production build successful, memory efficient (~190MB RSS)
+- Watchdog + cron keep server alive persistently
+- All 10 nexus components intact: dashboard, agents, waves, memory, specs, proposals, roadmap, etc.
