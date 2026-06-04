@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://github.com/microsoft/agent-framework",
+    "name": "Welcome to Microsoft Agent Framework! - GitHub",
+    "snippet": "Microsoft Agent Framework (MAF) is an open, multi-language framework for building production-grade AI agents and multi-agent workflows in .NET and Python.",
+    "host_name": "github.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/crewaiinc/crewai",
+    "name": "GitHub - crewAIInc/crewAI: Framework for orchestrating role-playing",
+    "snippet": "CrewAI unlocks the true potential of multi-agent automation, delivering the best-in-class combination of speed, flexibility, and control with either Crews of AI ...",
+    "host_name": "github.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://medium.com/@kyeg/getting-started-with-multi-agent-collaboration-using-the-multi-agent-github-template-0f0a6cba0dc0",
+    "name": "Getting Started with Multi-Agent Collaboration Using the  - Medium",
+    "snippet": "The Multi-Agent Github Template is built using Python, a versatile and widely-used programming language in the field of AI and machine learning.",
+    "host_name": "medium.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/ai-agents",
+    "name": "ai-agents · GitHub Topics",
+    "snippet": "An AI agent is a software system that autonomously perceives its environment, makes decisions, and takes actions to achieve goals ...",
+    "host_name": "github.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/LangChain/comments/1lc2d7p/any_github_repo_to_refer_for_complex_ai_agents",
+    "name": "Any GitHub repo to refer for complex AI Agents built with LangGraph",
+    "snippet": "Hey all, please suggest some good open-source, real world AI Agents projects built with LangGraph.",
+    "host_name": "www.reddit.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.blog/open-source/maintainers/from-mcp-to-multi-agents-the-top-10-open-source-ai-projects-on-github-right-now-and-why-they-matter",
+    "name": "From MCP to multi-agents: The top 10 new open source AI projects",
+    "snippet": "We analyzed every open source project created in the last 99 days (as of March 29, 2025), and ranked them in consideration of a number of factors.",
+    "host_name": "github.blog",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/multi-agents",
+    "name": "multi-agents · GitHub Topics",
+    "snippet": "An open-source, code-first Python toolkit for building, evaluating, and deploying sophisticated AI agents with flexibility and control. agent ai multi-agent ...",
+    "host_name": "github.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.facebook.com/groups/cto.platform/posts/2299994540446575",
+    "name": "GitHub repository for AI agent projects and frameworks - Facebook",
+    "snippet": "This GitHub Repo has everything you need to build AI Agents It includes - Python Tutorial Mathematical Foundations AI and ML Foundations Machine ...",
+    "host_name": "www.facebook.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://getstream.io/blog/multiagent-ai-frameworks",
+    "name": "Best 5 Frameworks To Build Multi-Agent AI Applications - GetStream.io",
+    "snippet": "This article aims to help you build AI agents powered by memory, knowledgebase, tools, and reasoning and chat with them using the command line and beautiful ...",
+    "host_name": "getstream.io",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://huggingface.co/blog/tegridydev/open-source-ai-agents-directory",
+    "name": "Open Source AI Agents | Github/Repo List | [2025] - Hugging Face",
+    "snippet": "AutoGen: Multi-agent framework, diverse agents. Build your own, multi-agent. AutoGPT: Experimental GPT-4 autonomous agent. General purpose ...",
+    "host_name": "huggingface.co",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

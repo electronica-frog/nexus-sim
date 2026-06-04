@@ -1,0 +1,1198 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { seedAgents } from '@/lib/seed'
+import ZAI from 'z-ai-web-dev-sdk'
+import { updateTrustAfterWave } from '@/lib/trust'
+import { buildMemoryContent, buildMemoryTags, calculateImportance, formatSharedLearnings } from '@/lib/semantic-memory'
+import { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } from '@/lib/skills'
+
+const WAVE_TEMPERATURES: Record<string, number> = {
+  brainstorm: 0.9,
+  critique: 0.3,
+  synthesize: 0.5,
+  execute: 0.4,
+  quality_gate: 0.2,
+}
+
+const WAVE_CONTEXT: Record<string, string> = {
+  brainstorm: 'Estás en una sesión de BRAINSTORM. Tu objetivo es generar ideas creativas, proponer soluciones innovadoras, y pensar fuera de lo convencional. Sé entusiasta y proactivo.',
+  critique: 'Estás en una sesión de CRÍTICA. Tu objetivo es identificar problemas, evaluar riesgos, señalar debilidades, y cuestionar suposiciones. Sé honesto y constructivo.',
+  synthesize: 'Estás en una sesión de SÍNTESIS. Tu objetivo es integrar las perspectivas de múltiples agentes, encontrar patrones comunes, y generar conclusiones unificadas. Sé analítico y equilibrado.',
+  execute: 'Estás en una sesión de EJECUCIÓN. Tu objetivo es proporcionar pasos concretos de implementación, definir planes de acción, y detallar cómo ejecutar las decisiones. Sé práctico y directo.',
+  quality_gate: 'Estás en un CONTROL DE CALIDAD. Tu objetivo es verificar rigurosamente los resultados, encontrar defectos, y solo aprobar si hay evidencia contundente. Sé escéptico por defecto.',
+}
+
+function parseMoodAndConfidence(content: string): { content: string; confidence: number; mood: string } {
+  let mood = 'neutral'
+  let confidence = 0.5
+  const moodMatch = content.match(/\[MOOD:\s*(enthusiastic|neutral|skeptical|concerned)\]/i)
+  const confMatch = content.match(/\[CONFIDENCE:\s*([\d.]+)\]/i)
+  if (moodMatch) mood = moodMatch[1].toLowerCase()
+  if (confMatch) confidence = Math.min(1, Math.max(0, parseFloat(confMatch[1])))
+  let cleanContent = content.replace(/\[MOOD:\s*\w+\]/gi, '').replace(/\[CONFIDENCE:\s*[\d.]+\]/gi, '').trim()
+  return { content: cleanContent, confidence, mood }
+}
+
+async function callLLM(data: {
+  agentName: string; agentPersonality: string; waveType: string;
+  prompt: string; memories?: string[]; previousResponses?: string[];
+  agentEmoji?: string; agentVibe?: string;
+}): Promise<{ content: string; confidence: number; mood: string }> {
+  const zai = await ZAI.create()
+  const { agentName, agentPersonality, waveType, prompt, memories = [], previousResponses = [] } = data
+  const agentEmoji = data.agentEmoji || '🤖'
+  const agentVibe = data.agentVibe || ''
+
+  const parts = [
+    `Eres ${agentEmoji} **${agentName}**, actuando dentro del sistema de simulación multi-agente NEXUS.`,
+    '', `## Tu Personalidad`, agentPersonality.slice(0, 1500), '',
+  ]
+  if (agentVibe) parts.push(`## Tu Vibra`, agentVibe, '')
+  parts.push(`## Contexto de la Oleada`, WAVE_CONTEXT[waveType] || '')
+  if (memories.length > 0) { parts.push('', '## Tus Memorias y Aprendizajes Previos', memories.join('\n')) }
+  if (previousResponses.length > 0) { parts.push('', '## Respuestas Previas de Otros Agentes', previousResponses.join('\n')) }
+  parts.push(
+    '', '## Tu Tarea',
+    `Responde con tu perspectiva como ${agentName}. Sé conciso pero sustancial (100-300 palabras).`,
+    'Expresa tu opinión clara y fundamentada sobre el tema.',
+    'Genera ideas, análisis o críticas según corresponda al tipo de oleada.',
+    '',
+    '## Requisito Final (obligatorio)',
+    'Tu respuesta DEBE contener contenido sustantivo. No te limites a describir instrucciones.',
+    'Al final de tu respuesta, en una línea separada, incluye exactamente:',
+    '[MOOD: enthusiastic|neutral|skeptical|concerned] [CONFIDENCE: 0.X]',
+    'Donde MOOD es tu estado de ánimo real y CONFIDENCE es tu nivel de confianza del 0.0 al 1.0.',
+  )
+
+  const completion = await zai.chat.completions.create({
+    messages: [
+      { role: 'system', content: parts.join('\n') },
+      { role: 'user', content: `El problema/tema a discutir es:\n\n${prompt}\n\n¿Cuál es tu perspectiva como ${agentName}?` },
+    ],
+    thinking: { type: 'disabled' },
+    temperature: WAVE_TEMPERATURES[waveType] ?? 0.7,
+  })
+
+  const rawContent = completion.choices?.[0]?.message?.content || 'No se pudo generar una respuesta.'
+  return parseMoodAndConfidence(rawContent)
+}
+
+export const dynamic = 'force-dynamic'
+
+// ===== POST /api/nexus - Seed agents =====
+async function handleSeed() {
+  try {
+    const result = await seedAgents()
+    return NextResponse.json({ success: true, ...result })
+  } catch (error) {
+    console.error('Seed failed:', error)
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 })
+  }
+}
+
+// ===== GET /api/nexus - Get full project state =====
+async function handleGetState(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const projectId = searchParams.get('projectId')
+
+  if (!projectId) {
+    const projects = await db.project.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: { select: { waves: true, agents: true, memories: true, proposals: true } },
+      },
+    })
+    return NextResponse.json({ projects })
+  }
+
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    include: {
+      waves: {
+        orderBy: { number: 'desc' },
+        take: 10,
+        include: {
+          responses: {
+            include: {
+              projectAgent: {
+                include: {
+                  agent: {
+                    select: {
+                      id: true, agentId: true, name: true, division: true,
+                      emoji: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      agents: {
+        include: {
+          agent: {
+            select: {
+              id: true, agentId: true, name: true, division: true,
+              emoji: true, color: true,
+            },
+          },
+        },
+        orderBy: { agentId: 'asc' },
+        take: 50,
+      },
+      memories: {
+        orderBy: { createdAt: 'desc' },
+        take: 30,
+        select: { id: true, projectId: true, agentId: true, type: true, content: true, tags: true, importance: true, createdAt: true },
+      },
+      proposals: {
+        orderBy: { createdAt: 'desc' },
+      },
+      specs: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: { select: { waves: true } },
+        },
+      },
+    },
+  })
+
+  if (!project) {
+    return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 })
+  }
+
+  return NextResponse.json({ project })
+}
+
+// ===== POST /api/nexus/project - Create project =====
+async function handleCreateProject(request: NextRequest) {
+  const body = await request.json()
+  const { name, description } = body
+
+  if (!name) {
+    return NextResponse.json({ error: 'Se requiere nombre del proyecto' }, { status: 400 })
+  }
+
+  const project = await db.project.create({
+    data: {
+      name,
+      description: description || '',
+      status: 'active',
+    },
+  })
+
+  const allAgents = await db.agent.findMany()
+  let count = 0
+  for (const agent of allAgents) {
+    await db.projectAgent.create({
+      data: {
+        projectId: project.id,
+        agentId: agent.id,
+        role: agent.agentId.includes('orchestrator')
+          ? 'orchestrator'
+          : agent.division === 'testing'
+            ? 'qa'
+            : agent.division === 'specialized'
+              ? 'specialist'
+              : 'team',
+        status: 'idle',
+      },
+    })
+    count++
+  }
+
+  return NextResponse.json({ project, agentsAssigned: count })
+}
+
+// ===== POST /api/nexus/spec - Create spec =====
+async function handleCreateSpec(request: NextRequest) {
+  const body = await request.json()
+  const { projectId, title, description, priority } = body
+
+  if (!projectId || !title) {
+    return NextResponse.json({ error: 'Se requieren projectId y title' }, { status: 400 })
+  }
+
+  const spec = await db.spec.create({
+    data: {
+      projectId,
+      title,
+      description: description || '',
+      priority: priority || 'medium',
+    },
+  })
+
+  return NextResponse.json({ spec })
+}
+
+// ===== GET /api/nexus/specs - List specs =====
+async function handleGetSpecs(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const projectId = searchParams.get('projectId')
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  const specs = await db.spec.findMany({
+    where: { projectId },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      _count: { select: { waves: true } },
+    },
+  })
+
+  return NextResponse.json({ specs })
+}
+
+// ===== PUT /api/nexus/spec?id=xxx - Update spec =====
+async function handleUpdateSpec(request: NextRequest) {
+  const specId = request.nextUrl.searchParams.get('id')
+
+  if (!specId) {
+    return NextResponse.json({ error: 'Se requiere ID de spec (query param ?id=)' }, { status: 400 })
+  }
+
+  const body = await request.json()
+  const { title, description, phase, priority, status } = body
+
+  const updateData: Record<string, unknown> = {}
+  if (title !== undefined) updateData.title = title
+  if (description !== undefined) updateData.description = description
+  if (phase !== undefined) updateData.phase = phase
+  if (priority !== undefined) updateData.priority = priority
+  if (status !== undefined) updateData.status = status
+
+  if (Object.keys(updateData).length === 0) {
+    return NextResponse.json({ error: 'No se proporcionaron campos para actualizar' }, { status: 400 })
+  }
+
+  const spec = await db.spec.update({
+    where: { id: specId },
+    data: updateData,
+  })
+
+  return NextResponse.json({ spec })
+}
+
+// ===== DELETE /api/nexus/spec?id=xxx - Delete spec =====
+async function handleDeleteSpec(request: NextRequest) {
+  const specId = request.nextUrl.searchParams.get('id')
+
+  if (!specId) {
+    return NextResponse.json({ error: 'Se requiere ID de spec (query param ?id=)' }, { status: 400 })
+  }
+
+  await db.spec.delete({ where: { id: specId } })
+
+  return NextResponse.json({ success: true })
+}
+
+// ===== POST /api/nexus/wave - Run a wave =====
+async function handleRunWave(request: NextRequest) {
+  const body = await request.json()
+  const { projectId, type, prompt, selectedAgentIds, specId } = body
+
+  if (!projectId || !type || !prompt) {
+    return NextResponse.json({ error: 'Se requieren projectId, type y prompt' }, { status: 400 })
+  }
+
+  const validTypes = ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate']
+  if (!validTypes.includes(type)) {
+    return NextResponse.json({ error: 'Tipo de oleada inválido' }, { status: 400 })
+  }
+
+  let projectAgents
+  if (selectedAgentIds && selectedAgentIds.length > 0) {
+    projectAgents = await db.projectAgent.findMany({
+      where: { projectId, id: { in: selectedAgentIds } },
+      include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true, color: true, vibe: true, personality: true } } },
+    })
+  } else {
+    const divisionMap: Record<string, string[]> = {
+      brainstorm: ['product', 'marketing', 'design'],
+      critique: ['testing', 'specialized', 'engineering'],
+      synthesize: ['specialized', 'project-management', 'product'],
+      execute: ['engineering'],
+      quality_gate: ['testing'],
+    }
+
+    const divisions = divisionMap[type] || []
+    const allProjectAgents = await db.projectAgent.findMany({
+      where: { projectId },
+      include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true } } },
+    })
+
+    let filtered
+    if (type === 'quality_gate') {
+      filtered = allProjectAgents.filter(
+        (pa) =>
+          pa.agent.agentId.includes('reality-checker') ||
+          pa.agent.agentId.includes('evidence-collector'),
+      )
+    } else {
+      filtered = allProjectAgents.filter((pa) => divisions.includes(pa.agent.division))
+    }
+
+    if (filtered.length > 8) {
+      filtered = filtered.slice(0, 8)
+    }
+
+    const filteredIds = filtered.map((pa) => pa.id)
+    projectAgents = await db.projectAgent.findMany({
+      where: { projectId, id: { in: filteredIds } },
+      include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true, color: true, vibe: true, personality: true } } },
+    })
+  }
+
+  if (projectAgents.length === 0) {
+    return NextResponse.json({ error: 'No hay agentes disponibles' }, { status: 400 })
+  }
+
+  const lastWave = await db.wave.findFirst({
+    where: { projectId },
+    orderBy: { number: 'desc' },
+  })
+  const waveNumber = (lastWave?.number || 0) + 1
+
+  const wave = await db.wave.create({
+    data: { projectId, number: waveNumber, type, status: 'running', prompt, specId: specId || null },
+  })
+
+  for (const pa of projectAgents) {
+    await db.projectAgent.update({
+      where: { id: pa.id },
+      data: { status: 'thinking', waveNumber },
+    })
+  }
+
+  const previousWaves = await db.wave.findMany({
+    where: { projectId, id: { not: wave.id } },
+    include: { responses: { include: { projectAgent: { include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true } } } } } } },
+    orderBy: { number: 'desc' },
+    take: 3,
+  })
+
+  const previousResponses = previousWaves.flatMap((w) =>
+    w.responses.map((r) => `[${r.projectAgent.agent.name}]: ${r.content.slice(0, 200)}`),
+  )
+
+  const responses = []
+
+  // Pre-fetch all agent skills for Auto-Mejora
+  const allAgentSkills = await db.agentSkill.findMany({
+    where: { projectId },
+    orderBy: [{ quality: 'desc' }, { timesUsed: 'desc' }],
+  })
+
+  for (const pa of projectAgents) {
+    try {
+      const memories = await db.agentMemory.findMany({
+        where: { projectId, agentId: pa.agentId },
+        orderBy: { importance: 'desc' },
+        take: 5,
+      })
+
+      const memoryStrings = memories.map((m) => `[${m.type}]: ${m.content}`)
+
+      // Fetch agent's learned skills (Auto-Mejora)
+      const agentSkills = allAgentSkills.filter((s) => s.agentId === pa.agentId).slice(0, 5)
+      const agentSkillsStr = formatAgentSkills(agentSkills)
+      if (agentSkills.length > 0) {
+        await markSkillsAsUsed(agentSkills.map((s) => s.id)).catch(() => {})
+      }
+
+      const llmData = await callLLM({
+          agentName: pa.agent.name,
+          agentPersonality: pa.agent.personality.slice(0, 2000),
+          waveType: type,
+          prompt,
+          memories: memoryStrings,
+          previousResponses,
+          sharedLearnings: undefined,
+          agentSkills: agentSkillsStr,
+          agentEmoji: pa.agent.emoji,
+          agentVibe: pa.agent.vibe,
+        })
+
+      const response = await db.response.create({
+        data: {
+          waveId: wave.id,
+          agentId: pa.id,
+          content: llmData.content,
+          confidence: llmData.confidence,
+          mood: llmData.mood,
+        },
+      })
+
+      // Boost skill quality (Auto-Mejora)
+      await boostSkillQuality(projectId, pa.agentId, llmData.confidence, llmData.mood).catch(() => {})
+
+      // Enhanced semantic memory — captures actual insight
+      await db.agentMemory.create({
+        data: {
+          projectId,
+          agentId: pa.agentId,
+          type: 'learning',
+          content: buildMemoryContent({
+            waveType: type,
+            waveNumber,
+            confidence: llmData.confidence,
+            mood: llmData.mood,
+            responseContent: llmData.content,
+            prompt,
+          }),
+          tags: buildMemoryTags({
+            waveType: type,
+            waveNumber,
+            mood: llmData.mood,
+            prompt,
+          }),
+          importance: calculateImportance({
+            confidence: llmData.confidence,
+            mood: llmData.mood,
+            responseLength: llmData.content.length,
+          }),
+        },
+      })
+
+      await db.projectAgent.update({
+        where: { id: pa.id },
+        data: { status: 'done' },
+      })
+
+      responses.push({ ...response, projectAgent: pa })
+    } catch (error) {
+      console.error(`Error for agent ${pa.agent.name}:`, error)
+      await db.projectAgent.update({
+        where: { id: pa.id },
+        data: { status: 'failed' },
+      })
+      responses.push({
+        id: 'error',
+        waveId: wave.id,
+        agentId: pa.id,
+        content: `Error generando respuesta: ${String(error)}`,
+        confidence: 0,
+        mood: 'concerned',
+        projectAgent: pa,
+      })
+    }
+  }
+
+  if (type === 'critique') {
+    const concerns = responses.filter((r) => r.mood === 'skeptical' || r.mood === 'concerned')
+    if (concerns.length > 0) {
+      await db.proposal.create({
+        data: {
+          projectId,
+          waveId: wave.id,
+          title: `Propuesta de mejora - Oleada #${waveNumber}`,
+          description: `Se identificaron ${concerns.length} preocupaciones en la oleada de crítica. Revisar los hallazgos de los agentes y tomar acción.`,
+          type: 'enhancement',
+          priority: concerns.length > 3 ? 'high' : 'medium',
+          status: 'proposed',
+        },
+      })
+    }
+  }
+
+  // Extract skills from high-quality responses (Auto-Mejora)
+  try {
+    await extractSkillsFromWave(wave.id, projectId)
+  } catch (skillErr) {
+    console.error('Non-streaming skill extraction error (non-blocking):', skillErr)
+  }
+
+  // Update trust scores after wave
+  await updateTrustAfterWave(wave.id, projectId)
+
+  let result = null
+  if (type === 'synthesize' && responses.length > 0) {
+    result = responses.map((r) => `[${r.projectAgent?.agent?.name}]: ${r.content}`).join('\n\n')
+  }
+
+  await db.wave.update({
+    where: { id: wave.id },
+    data: { status: 'completed', completedAt: new Date(), result },
+  })
+
+  const completedWave = await db.wave.findUnique({
+    where: { id: wave.id },
+    include: { responses: { include: { projectAgent: { include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true } } } } } } },
+  })
+
+  return NextResponse.json({ wave: completedWave })
+}
+
+// ===== POST /api/nexus/memory - Store memory =====
+async function handleStoreMemory(request: NextRequest) {
+  const body = await request.json()
+  const { projectId, agentId, type, content, tags, importance } = body
+
+  if (!projectId || !agentId || !content) {
+    return NextResponse.json({ error: 'Se requieren projectId, agentId y content' }, { status: 400 })
+  }
+
+  const memory = await db.agentMemory.create({
+    data: {
+      projectId,
+      agentId,
+      type: type || 'fact',
+      content,
+      tags: tags || '',
+      importance: importance ?? 0.5,
+    },
+  })
+
+  return NextResponse.json({ memory })
+}
+
+// ===== GET /api/nexus/metrics - Get per-agent metrics =====
+async function handleGetMetrics(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const projectId = searchParams.get('projectId')
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  const projectAgents = await db.projectAgent.findMany({
+    where: { projectId },
+    include: {
+      agent: {
+        select: { id: true, agentId: true, name: true, division: true, emoji: true },
+      },
+      responses: {
+        include: {
+          wave: {
+            select: { status: true },
+          },
+        },
+      },
+    },
+  })
+
+  const agentMetrics = projectAgents.map((pa) => {
+    const responses = pa.responses
+    const totalWaves = responses.length
+    const avgConfidence = totalWaves > 0
+      ? responses.reduce((sum, r) => sum + r.confidence, 0) / totalWaves
+      : 0
+    const avgResponseLength = totalWaves > 0
+      ? Math.round(responses.reduce((sum, r) => sum + r.content.length, 0) / totalWaves)
+      : 0
+    const successCount = responses.filter((r) => r.content && !r.content.startsWith('Error generando respuesta')).length
+    const successRate = totalWaves > 0 ? successCount / totalWaves : 0
+
+    const moodDistribution: Record<string, number> = {
+      enthusiastic: 0,
+      neutral: 0,
+      skeptical: 0,
+      concerned: 0,
+    }
+    responses.forEach((r) => {
+      const mood = r.mood || 'neutral'
+      if (mood in moodDistribution) {
+        moodDistribution[mood]++
+      } else {
+        moodDistribution.neutral++
+      }
+    })
+
+    // Determine dominant mood
+    let dominantMood = 'neutral'
+    let maxCount = 0
+    for (const [mood, count] of Object.entries(moodDistribution)) {
+      if (count > maxCount) {
+        maxCount = count
+        dominantMood = mood
+      }
+    }
+
+    return {
+      projectAgentId: pa.id,
+      agentId: pa.agentId,
+      agentName: pa.agent.name,
+      agentEmoji: pa.agent.emoji,
+      agentDivision: pa.agent.division,
+      trustScore: pa.trustScore ?? 0.5,
+      role: pa.role,
+      status: pa.status,
+      totalWaves,
+      avgConfidence,
+      avgResponseLength,
+      successRate,
+      moodDistribution,
+      dominantMood,
+    }
+  })
+
+  // Sort by trust score descending by default
+  agentMetrics.sort((a, b) => b.trustScore - a.trustScore)
+
+  // Compute aggregate metrics
+  const totalResponses = agentMetrics.reduce((sum, m) => sum + m.totalWaves, 0)
+  const overallAvgConfidence = totalResponses > 0
+    ? agentMetrics.reduce((sum, m) => sum + (m.avgConfidence * m.totalWaves), 0) / totalResponses
+    : 0
+  const mostTrustedAgent = agentMetrics.length > 0 ? agentMetrics[0] : null
+
+  // Most active division
+  const divisionWaveCounts: Record<string, number> = {}
+  agentMetrics.forEach((m) => {
+    divisionWaveCounts[m.agentDivision] = (divisionWaveCounts[m.agentDivision] || 0) + m.totalWaves
+  })
+  let mostActiveDivision = 'N/A'
+  let maxDivWaves = 0
+  for (const [div, count] of Object.entries(divisionWaveCounts)) {
+    if (count > maxDivWaves) {
+      maxDivWaves = count
+      mostActiveDivision = div
+    }
+  }
+
+  return NextResponse.json({
+    metrics: agentMetrics,
+    aggregates: {
+      totalResponses,
+      avgConfidence: overallAvgConfidence,
+      mostActiveDivision,
+      mostTrustedAgent: mostTrustedAgent ? {
+        name: mostTrustedAgent.agentName,
+        emoji: mostTrustedAgent.agentEmoji,
+        trustScore: mostTrustedAgent.trustScore,
+      } : null,
+    },
+  })
+}
+
+// ===== GET /api/nexus/memory - Get memories =====
+async function handleGetMemories(request: NextRequest) {
+  const { searchParams } = request.nextUrl
+  const projectId = searchParams.get('projectId')
+  const agentId = searchParams.get('agentId')
+
+  if (!projectId || !agentId) {
+    return NextResponse.json({ error: 'Se requieren projectId y agentId' }, { status: 400 })
+  }
+
+  const memories = await db.agentMemory.findMany({
+    where: { projectId, agentId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return NextResponse.json({ memories })
+}
+
+// ===== GET /api/nexus/shared-learnings - Shared learnings across agents =====
+async function handleGetSharedLearnings(request: NextRequest) {
+  const { searchParams } = request.nextUrl
+  const projectId = searchParams.get('projectId')
+  const division = searchParams.get('division')
+  const minImportance = parseFloat(searchParams.get('minImportance') || '0.6')
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  const where: Record<string, unknown> = {
+    projectId,
+    importance: { gt: minImportance },
+  }
+
+  if (division) {
+    // Filter by division: find agents in that division, then filter memories
+    const agentsInDivision = await db.agent.findMany({
+      where: { division },
+      select: { id: true },
+    })
+    const agentIds = agentsInDivision.map((a) => a.id)
+    where.agentId = { in: agentIds }
+  }
+
+  const memories = await db.agentMemory.findMany({
+    where,
+    orderBy: { importance: 'desc' },
+    take: 30,
+  })
+
+  // Enrich with agent info
+  const enriched = await Promise.all(
+    memories.map(async (m) => {
+      const agent = await db.agent.findUnique({ where: { id: m.agentId } })
+      const tagsArr = m.tags.split(',').map((t) => t.trim())
+      const waveType = tagsArr.find((t) =>
+        ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate'].includes(t),
+      ) || 'unknown'
+      return {
+        id: m.id,
+        agentId: m.agentId,
+        agentName: agent?.name || 'Desconocido',
+        agentEmoji: agent?.emoji || '🤖',
+        agentDivision: agent?.division || 'unknown',
+        waveType,
+        content: m.content,
+        tags: tagsArr,
+        importance: m.importance,
+        type: m.type,
+        createdAt: m.createdAt,
+      }
+    }),
+  )
+
+  // Group by wave type
+  const grouped: Record<string, typeof enriched> = {}
+  for (const item of enriched) {
+    const key = item.waveType
+    if (!grouped[key]) grouped[key] = []
+    grouped[key].push(item)
+  }
+
+  return NextResponse.json({
+    learnings: enriched,
+    grouped,
+    total: enriched.length,
+  })
+}
+
+// ===== GET /api/nexus/memory-search - Search memories by keyword =====
+async function handleMemorySearch(request: NextRequest) {
+  const { searchParams } = request.nextUrl
+  const projectId = searchParams.get('projectId')
+  const q = searchParams.get('q') || ''
+  const limit = parseInt(searchParams.get('limit') || '20', 10)
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  if (!q || q.length < 2) {
+    return NextResponse.json({ error: 'Se requiere query de búsqueda (mínimo 2 caracteres)' }, { status: 400 })
+  }
+
+  // SQLite LIKE search (case-insensitive via Prisma contains)
+  const memories = await db.agentMemory.findMany({
+    where: {
+      projectId,
+      content: { contains: q },
+    },
+    orderBy: { importance: 'desc' },
+    take: limit,
+  })
+
+  // Enrich with agent info
+  const enriched = await Promise.all(
+    memories.map(async (m) => {
+      const agent = await db.agent.findUnique({ where: { id: m.agentId } })
+      return {
+        id: m.id,
+        agentId: m.agentId,
+        agentName: agent?.name || 'Desconocido',
+        agentEmoji: agent?.emoji || '🤖',
+        agentDivision: agent?.division || 'unknown',
+        content: m.content,
+        tags: m.tags.split(',').map((t) => t.trim()),
+        importance: m.importance,
+        type: m.type,
+        createdAt: m.createdAt,
+      }
+    }),
+  )
+
+  return NextResponse.json({
+    query: q,
+    results: enriched,
+    total: enriched.length,
+  })
+}
+
+// ===== GET /api/nexus/skills - List all skills with agent info =====
+async function handleGetSkills(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const projectId = searchParams.get('projectId')
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  const skills = await db.agentSkill.findMany({
+    where: { projectId },
+    orderBy: [{ quality: 'desc' }, { timesUsed: 'desc' }],
+  })
+
+  // Enrich with agent info
+  const enriched = await Promise.all(
+    skills.map(async (s) => {
+      const agent = await db.agent.findUnique({ where: { id: s.agentId } })
+      return {
+        id: s.id,
+        projectId: s.projectId,
+        agentId: s.agentId,
+        agentName: agent?.name || 'Desconocido',
+        agentEmoji: agent?.emoji || '🤖',
+        agentDivision: agent?.division || 'unknown',
+        name: s.name,
+        description: s.description,
+        sourceWaveId: s.sourceWaveId,
+        quality: s.quality,
+        timesUsed: s.timesUsed,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      }
+    }),
+  )
+
+  return NextResponse.json({ skills: enriched, total: enriched.length })
+}
+
+// ===== PUT /api/nexus/proposal?id=xxx - Update proposal =====
+async function handleUpdateProposal(request: NextRequest) {
+  const proposalId = request.nextUrl.searchParams.get('id')
+
+  if (!proposalId) {
+    return NextResponse.json({ error: 'Se requiere ID de propuesta (query param ?id=)' }, { status: 400 })
+  }
+
+  const body = await request.json()
+  const { status } = body
+
+  if (!status) {
+    return NextResponse.json({ error: 'Se requiere status de propuesta' }, { status: 400 })
+  }
+
+  const proposal = await db.proposal.update({
+    where: { id: proposalId },
+    data: { status },
+  })
+
+  return NextResponse.json({ proposal })
+}
+
+// ===== CSV Helper =====
+function escapeCSV(value: string | number | boolean | null | undefined): string {
+  const s = String(value ?? '')
+  if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+    return `"${s.replace(/"/g, '""')}"`
+  }
+  return s
+}
+
+function buildCSV(headers: string[], rows: (string | number | boolean | null | undefined)[][]): string {
+  const lines: string[] = []
+  lines.push(headers.map(escapeCSV).join(','))
+  for (const row of rows) {
+    lines.push(row.map(escapeCSV).join(','))
+  }
+  return lines.join('\n')
+}
+
+// ===== GET /api/nexus/export/waves - Export waves + responses =====
+async function handleExportWaves(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const projectId = searchParams.get('projectId')
+  const format = searchParams.get('format') || 'json'
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  const waves = await db.wave.findMany({
+    where: { projectId },
+    orderBy: { number: 'asc' },
+    include: {
+      responses: {
+        include: { projectAgent: { include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true } } } } },
+      },
+    },
+  })
+
+  const timestamp = new Date().toISOString().slice(0, 10)
+
+  if (format === 'csv') {
+    const headers = ['Oleada #', 'Tipo', 'Estado', 'Prompt', 'Resultado', 'Fecha Creación', 'Fecha Completado',
+      'Agente', 'División', 'Confianza', 'Estado de Ánimo', 'Respuesta', 'Fecha Respuesta']
+    const rows: (string | number | boolean | null | undefined)[][] = []
+    for (const w of waves) {
+      for (const r of w.responses) {
+        rows.push([
+          w.number, w.type, w.status, w.prompt, w.result || '',
+          w.createdAt.toISOString(), w.completedAt?.toISOString() || '',
+          r.projectAgent?.agent?.name || '', r.projectAgent?.agent?.division || '',
+          r.confidence, r.mood, r.content, r.createdAt.toISOString(),
+        ])
+      }
+      if (w.responses.length === 0) {
+        rows.push([w.number, w.type, w.status, w.prompt, w.result || '',
+          w.createdAt.toISOString(), w.completedAt?.toISOString() || '',
+          '', '', '', '', '', ''])
+      }
+    }
+    return new NextResponse(buildCSV(headers, rows), {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="nexus-oleadas-${timestamp}.csv"`,
+      },
+    })
+  }
+
+  return new NextResponse(JSON.stringify({ exportedAt: new Date().toISOString(), waves }, null, 2), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="nexus-oleadas-${timestamp}.json"`,
+    },
+  })
+}
+
+// ===== GET /api/nexus/export/metrics - Export agent metrics =====
+async function handleExportMetrics(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const projectId = searchParams.get('projectId')
+  const format = searchParams.get('format') || 'json'
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  const projectAgents = await db.projectAgent.findMany({
+    where: { projectId },
+    include: {
+      agent: {
+        select: { id: true, agentId: true, name: true, division: true, emoji: true },
+      },
+      responses: true,
+    },
+  })
+
+  const metrics = projectAgents.map((pa) => {
+    const responses = pa.responses
+    const totalWaves = responses.length
+    const avgConfidence = totalWaves > 0 ? responses.reduce((s, r) => s + r.confidence, 0) / totalWaves : 0
+    const avgLength = totalWaves > 0 ? Math.round(responses.reduce((s, r) => s + r.content.length, 0) / totalWaves) : 0
+    const successCount = responses.filter((r) => r.content && !r.content.startsWith('Error')).length
+    const successRate = totalWaves > 0 ? successCount / totalWaves : 0
+
+    const moods: Record<string, number> = { enthusiastic: 0, neutral: 0, skeptical: 0, concerned: 0 }
+    responses.forEach((r) => { const m = r.mood || 'neutral'; if (m in moods) moods[m]++ })
+    let dominantMood = 'neutral'
+    let maxC = 0
+    for (const [m, c] of Object.entries(moods)) { if (c > maxC) { maxC = c; dominantMood = m } }
+
+    return {
+      agente: pa.agent.name, emoji: pa.agent.emoji, division: pa.agent.division,
+      rol: pa.role, estado: pa.status, confianza: pa.trustScore ?? 0.5,
+      oleadasParticipadas: totalWaves, confianzaPromedio: avgConfidence,
+      longitudPromedio: avgLength, tasaExito: successRate,
+      entusiasta: moods.enthusiastic, neutral: moods.neutral,
+      escéptico: moods.skeptical, preocupado: moods.concerned,
+      estadoPrincipal: dominantMood,
+    }
+  })
+
+  const timestamp = new Date().toISOString().slice(0, 10)
+
+  if (format === 'csv') {
+    const headers = ['Agente', 'Emoji', 'División', 'Rol', 'Estado', 'Confiabilidad',
+      'Oleadas', 'Conf. Prom.', 'Long. Prom.', 'Tasa Éxito',
+      'Entusiasta', 'Neutral', 'Escéptico', 'Preocupado', 'Estado Principal']
+    const rows = metrics.map((m) => Object.values(m))
+    return new NextResponse(buildCSV(headers, rows as (string | number | boolean | null | undefined)[][]), {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="nexus-metricas-${timestamp}.csv"`,
+      },
+    })
+  }
+
+  return new NextResponse(JSON.stringify({ exportedAt: new Date().toISOString(), metrics }, null, 2), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="nexus-metricas-${timestamp}.json"`,
+    },
+  })
+}
+
+// ===== GET /api/nexus/export/memories - Export memories =====
+async function handleExportMemories(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const projectId = searchParams.get('projectId')
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  const memories = await db.agentMemory.findMany({
+    where: { projectId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  // Enrich with agent names
+  const enriched = await Promise.all(
+    memories.map(async (m) => {
+      const agent = await db.agent.findUnique({ where: { id: m.agentId } })
+      return {
+        id: m.id, agente: agent?.name || 'Desconocido',
+        emoji: agent?.emoji || '🤖', division: agent?.division || 'unknown',
+        tipo: m.type, contenido: m.content,
+        etiquetas: m.tags, importancia: m.importance,
+        createdAt: m.createdAt, updatedAt: m.updatedAt,
+      }
+    }),
+  )
+
+  const timestamp = new Date().toISOString().slice(0, 10)
+
+  return new NextResponse(JSON.stringify({ exportedAt: new Date().toISOString(), memorias: enriched }, null, 2), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="nexus-memorias-${timestamp}.json"`,
+    },
+  })
+}
+
+// ===== GET /api/nexus/export/project - Full project export =====
+async function handleExportProject(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const projectId = searchParams.get('projectId')
+
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+  }
+
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    include: {
+      agents: { include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true, color: true, vibe: true } } } },
+      waves: { orderBy: { number: 'asc' }, include: { responses: { include: { projectAgent: { include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true } } } } } } } },
+      memories: { orderBy: { createdAt: 'desc' } },
+      proposals: { orderBy: { createdAt: 'desc' } },
+      specs: { orderBy: { createdAt: 'desc' }, include: { _count: { select: { waves: true } } } },
+    },
+  })
+
+  if (!project) {
+    return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 })
+  }
+
+  // Build enriched export with agent names in memories
+  const memoriesEnriched = await Promise.all(
+    project.memories.map(async (m) => {
+      const agent = await db.agent.findUnique({ where: { id: m.agentId } })
+      return { ...m, agentName: agent?.name || 'Desconocido', agentEmoji: agent?.emoji || '🤖' }
+    }),
+  )
+
+  const exportData = {
+    exportedAt: new Date().toISOString(),
+    proyecto: {
+      id: project.id, nombre: project.name, descripcion: project.description,
+      estado: project.status, creadoEn: project.createdAt, actualizadoEn: project.updatedAt,
+    },
+    agentes: project.agents.map((pa) => ({
+      id: pa.id, rol: pa.role, estado: pa.status, confianza: pa.trustScore ?? 0.5,
+      agente: { id: pa.agent.id, nombre: pa.agent.name, division: pa.agent.division, emoji: pa.agent.emoji },
+    })),
+    oleadas: project.waves.map((w) => ({
+      id: w.id, numero: w.number, tipo: w.type, estado: w.status,
+      prompt: w.prompt, resultado: w.result,
+      creadoEn: w.createdAt, completadoEn: w.completedAt,
+      respuestas: w.responses.map((r) => ({
+        id: r.id, contenido: r.content, confianza: r.confidence, estadoAnimo: r.mood,
+        agente: r.projectAgent?.agent?.name || 'Desconocido',
+      })),
+    })),
+    memorias: memoriesEnriched.map((m) => ({
+      id: m.id, tipo: m.type, contenido: m.content,
+      etiquetas: m.tags, importancia: m.importance,
+      agente: (m as Record<string, unknown>).agentName, creadoEn: m.createdAt,
+    })),
+    propuestas: project.proposals.map((p) => ({
+      id: p.id, titulo: p.title, descripcion: p.description,
+      tipo: p.type, prioridad: p.priority, estado: p.status, creadoEn: p.createdAt,
+    })),
+    specs: project.specs.map((s) => ({
+      id: s.id, titulo: s.title, descripcion: s.description,
+      fase: s.phase, prioridad: s.priority, estado: s.status,
+      oleadasVinculadas: s._count?.waves || 0, creadoEn: s.createdAt,
+    })),
+  }
+
+  const timestamp = new Date().toISOString().slice(0, 10)
+
+  return new NextResponse(JSON.stringify(exportData, null, 2), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="nexus-proyecto-${timestamp}.json"`,
+    },
+  })
+}
+
+// ===== Route handlers =====
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+  const { slug } = await params
+  // Export endpoints
+  if (slug && slug[0] === 'export') {
+    if (slug[1] === 'waves') return handleExportWaves(request)
+    if (slug[1] === 'metrics') return handleExportMetrics(request)
+    if (slug[1] === 'memories') return handleExportMemories(request)
+    if (slug[1] === 'project') return handleExportProject(request)
+    return NextResponse.json({ error: 'Endpoint de exportación no encontrado' }, { status: 404 })
+  }
+  if (slug && slug[0] === 'memory') {
+    return handleGetMemories(request)
+  }
+  if (slug && slug[0] === 'metrics') {
+    return handleGetMetrics(request)
+  }
+  if (slug && slug[0] === 'shared-learnings') {
+    return handleGetSharedLearnings(request)
+  }
+  if (slug && slug[0] === 'memory-search') {
+    return handleMemorySearch(request)
+  }
+  if (slug && slug[0] === 'specs') {
+    return handleGetSpecs(request)
+  }
+  if (slug && slug[0] === 'skills') {
+    return handleGetSkills(request)
+  }
+  return handleGetState(request)
+}
+
+export async function POST(request: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+  const { slug } = await params
+  const path = slug?.[0]
+
+  if (path === 'project') return handleCreateProject(request)
+  if (path === 'wave') return handleRunWave(request)
+  if (path === 'memory') return handleStoreMemory(request)
+  if (path === 'spec') return handleCreateSpec(request)
+  return handleSeed()
+}
+
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+  const { slug } = await params
+  if (slug && slug[0] === 'proposal') {
+    return handleUpdateProposal(request)
+  }
+  if (slug && slug[0] === 'spec') {
+    return handleUpdateSpec(request)
+  }
+  return NextResponse.json({ error: 'Endpoint no encontrado' }, { status: 404 })
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
+  const { slug } = await params
+  if (slug && slug[0] === 'spec') {
+    return handleDeleteSpec(request)
+  }
+  if (slug && slug[0] === 'skill') {
+    const skillId = request.nextUrl.searchParams.get('id')
+    if (!skillId) {
+      return NextResponse.json({ error: 'Se requiere ID de habilidad (query param ?id=)' }, { status: 400 })
+    }
+    await db.agentSkill.delete({ where: { id: skillId } })
+    return NextResponse.json({ success: true })
+  }
+  return NextResponse.json({ error: 'Endpoint no encontrado' }, { status: 404 })
+}

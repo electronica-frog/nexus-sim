@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://dev.to/foxgem/ai-agent-memory-a-comparative-analysis-of-langgraph-crewai-and-autogen-31dp",
+    "name": "A Comparative Analysis of LangGraph, CrewAI, and AutoGen - DEV",
+    "snippet": "This report provides an in-depth analysis of memory management within AI agent frameworks, specifically focusing on LangGraph, CrewAI, and AutoGen.",
+    "host_name": "dev.to",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/LangChain/comments/1dpgr6p/how_to_manage_state_in_langgraph_for_multiple",
+    "name": "How to Manage State in LangGraph for Multiple Users? - Reddit",
+    "snippet": "Hello, I am currently developing a chatbot using LangGraph, and I'm facing some challenges with managing state for multiple users.",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=jc8gSY3yYq0",
+    "name": "Mastering State and Memory Management for AI Agents - YouTube",
+    "snippet": "In this lesson of our LangGraph Foundations series, we explore the critical concepts of State and Memory Management.",
+    "host_name": "www.youtube.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.agilesoftlabs.com/blog/2026/05/longterm-ai-agent-memory-with-langchain",
+    "name": "Long‑Term AI Agent Memory with LangChain & Supabase 2026",
+    "snippet": "This guide is the implementation playbook, covering every layer from setup through production operations. Why Agent Memory Is Hard: The ...",
+    "host_name": "www.agilesoftlabs.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://arxiv.org/html/2411.18241v1",
+    "name": "Exploration of LLM Multi-Agent Application Implementation Based",
+    "snippet": "This study aims to delve into the application of LangGraph and CrewAI in multi-agent systems, providing new perspectives for the future ...",
+    "host_name": "arxiv.org",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://theaishortcuts.substack.com/p/building-an-ai-agent-with-memory",
+    "name": "Build AI Agents with Long Term Memory Using LangChain v1 and",
+    "snippet": "A step-by-step guide on how to use the latest version of LangChain to build AI agents and store conversation history in a Supabase ...",
+    "host_name": "theaishortcuts.substack.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://focused.io/lab/persistent-agent-memory-in-langgraph",
+    "name": "Persistent Agent Memory in LangGraph - Focused.io",
+    "snippet": "Build stateful AI agents with LangGraph memory persistence. Implement checkpointers, long-term memory stores, and cross-session state. Mar ...",
+    "host_name": "focused.io",
+    "rank": 6,
+    "date": "May 28, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.instagram.com/reel/DYwOGClN3ag",
+    "name": "1. Multi-Agent Research Assistant - Build multiple agents where one",
+    "snippet": "Supercharge your development workflow and keep your AI agent smart from start to finish. OCR. agentmemory Persistent memory for AI coding agents ...",
+    "host_name": "www.instagram.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.crewai.com/en/guides/migration/migrating-from-langgraph",
+    "name": "Moving from LangGraph to CrewAI: A Practical Guide for Engineers",
+    "snippet": "If you already have built with LangGraph, learn how to quickly port your projects to CrewAI.",
+    "host_name": "docs.crewai.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://medium.com/@saeedhajebi/multiagent-orchestration-showdown-comparing-crewai-smolagents-and-langgraph-0e169b6a293d",
+    "name": "Multiagent Orchestration Showdown: Comparing CrewAI  - Medium",
+    "snippet": "CrewAI excels at role-based collaboration and verbose outputs, SmolAgents shines in dynamic planning and code generation, and LangGraph offers top-notch ...",
+    "host_name": "medium.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

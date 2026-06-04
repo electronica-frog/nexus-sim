@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.microsoft.com/en-us/research/publication/yes-and-a-generative-ai-multi-agent-framework-for-enhancing-diversity-of-thought-in-individual-ideation-for-problem-solving-through-confidence-based-agent-turn-taking",
+    "name": "YES AND: A Generative AI Multi-Agent Framework for Enhancing",
+    "snippet": "We propose YES AND, a Generative AI based multi-agent framework that simulates diverse perspectives through AI agents for ideation with a single user.",
+    "host_name": "www.microsoft.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.microsoft.com/en-us/research/wp-content/uploads/2025/03/CHI2025-Yes_And_An_AI_powered_problem_solving_framework_for_diversity_of_thought.pdf",
+    "name": "[PDF] YES AND: A Generative AI Multi-Agent Framework for  - Microsoft",
+    "snippet": "Diversity of thought is crucial in ideation for problem-solving, yet professionals in organisational settings often face challenges such as ...",
+    "host_name": "www.microsoft.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.linkedin.com/posts/sherrycomes_yes-and-a-generative-ai-multi-agent-framework-activity-7446954459399884800-Ui0f",
+    "name": "Sherry Comes' Post - LinkedIn",
+    "snippet": "... Diversity of Thought in Individual Ideation for Problem-Solving Through Confidence-Based Agent Turn-Taking microsoft.com. 2 · Like Comment.",
+    "host_name": "www.linkedin.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.researchgate.net/publication/391152199_YES_AND_A_Generative_AI_Multi-Agent_Framework_for_Enhancing_Diversity_of_Thought_in_Individual_Ideation_for_Problem-Solving_Through_Confidence-Based_Agent_Turn-Taking",
+    "name": "A Generative AI Multi-Agent Framework for Enhancing Diversity of",
+    "snippet": "YES AND: A Generative AI Multi-Agent Framework for Enhancing Diversity of Thought in Individual Ideation for Problem-Solving Through Confidence-Based Agent Turn ...",
+    "host_name": "www.researchgate.net",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/single-agent-multiple-agents",
+    "name": "Choosing Between Building a Single-Agent System or Multi-Agent",
+    "snippet": "This article provides criteria to help you decide whether to build single-agent or multi-agent systems across your organization.",
+    "host_name": "learn.microsoft.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=rZ1l5m1x1DM",
+    "name": "How Microsoft's New AI Tools Are Transforming Work - YouTube",
+    "snippet": "In this episode of the Return on Intelligence Podcast, host Daniel Anderson talks with Microsoft's Abram Jackson about the groundbreaking ...",
+    "host_name": "www.youtube.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://cognition.ai/blog/dont-build-multi-agents",
+    "name": "Don't Build Multi-Agents - Cognition",
+    "snippet": "Frameworks for LLM Agents have been surprisingly disappointing. I want to offer some principles for building agents based on our own trial ...",
+    "host_name": "cognition.ai",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://cloudwars.com/ai/microsoft-framework-supports-diverse-models-agents-to-drive-complex-actions",
+    "name": "Microsoft Framework Supports Diverse Models, Agents to Drive",
+    "snippet": "A graph-based engine that developers can use to build workflows combining agent reasoning with business logic, conditional branches, and ...",
+    "host_name": "cloudwars.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.examtopics.com/discussions/microsoft/view/406234-exam-ab-100-topic-1-question-27-discussion",
+    "name": "Exam AB-100 topic 1 question 27 discussion - ExamTopics",
+    "snippet": "You need to build two agents named Agent1 and Agent2. The solution must meet the following requirements: • Agent1 must be extendable by using ...",
+    "host_name": "www.examtopics.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent",
+    "name": "Semantic Kernel Agent Framework | Microsoft Learn",
+    "snippet": "The Semantic Kernel Agent Framework provides a platform within the Semantic Kernel eco-system that allow for the creation of AI agents.",
+    "host_name": "learn.microsoft.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

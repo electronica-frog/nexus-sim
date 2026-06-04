@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://github.com/Gentleman-Programming/engram",
+    "name": "Gentleman-Programming/engram: Persistent memory  - GitHub",
+    "snippet": "It gives Pi persistent project memory, compaction recovery, and shared memory with other MCP agents through the same local-or-cloud Engram brain. The package is ...",
+    "host_name": "github.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/Gentleman-Programming",
+    "name": "Gentleman-Programming - GitHub",
+    "snippet": "Community-driven AI agent skills for Claude Code, OpenCode, and other AI assistants. Curated patterns and community contributions. 540 84 ...",
+    "host_name": "github.com",
+    "rank": 1,
+    "date": "Jun 3, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/Gentleman-Programming/gentle-ai",
+    "name": "Gentleman-Programming/gentle-ai - GitHub",
+    "snippet": "sdd-engram-plugin — optional OpenCode TUI plugin to manage SDD profiles and browse Engram memories directly from OpenCode, with runtime ...",
+    "host_name": "github.com",
+    "rank": 2,
+    "date": "Jun 3, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=UoS_LP-PCG8",
+    "name": "The AI ​​ECOSYSTEM your agent is missing | Engram + SDD + Skills",
+    "snippet": "Install the entire AI ecosystem with a single command · Engram: Persistent memory that shares knowledge between sessions and peers · SDD with ...",
+    "host_name": "www.youtube.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/Gentleman-Programming/Gentleman.Dots",
+    "name": "Gentleman-Programming/Gentleman.Dots: My personal  - GitHub",
+    "snippet": "SDD Workflow, Spec-Driven Development with orchestrated sub-agents ; Skills, 24 coding pattern libraries (React 19, Next.js 15, TypeScript, Tailwind 4, etc.).",
+    "host_name": "github.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/devsarg/comments/1roytf2/aviven_hoy_9_de_marzo_hay_algo_mejor_para_laburar/?tl=en",
+    "name": "Spill the beans, is there anything better than Claude Code to work",
+    "snippet": "For example, I recently saw that gentleman programming released something in their repo where they build a kind of long-term memory for the ...",
+    "host_name": "www.reddit.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/Gentleman-Programming/agent-teams-lite",
+    "name": "GitHub - Gentleman-Programming/agent-teams-lite",
+    "snippet": "gentle-ai detects your installed tools, installs all skills, configures MCP servers, injects the SDD orchestrator, and sets up Engram persistent ...",
+    "host_name": "github.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/Gentleman-Programming/agent-teams-lite/blob/main/examples/antigravity/sdd-orchestrator.md",
+    "name": "agent-teams-lite/examples/antigravity/sdd-orchestrator.md at main",
+    "snippet": "Spec-Driven Development with AI Sub-Agents. An orchestrator + 9 specialized sub-agents for structured feature development.",
+    "host_name": "github.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/Gentleman-Programming/gentle-ai/blob/main/docs/intended-usage.md",
+    "name": "gentle-ai/docs/intended-usage.md at main - GitHub",
+    "snippet": "Run the installer, pick your agents and preset, Manually edit the generated config files ; Just start coding with your AI agent, Memorize SDD phases or commands.",
+    "host_name": "github.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.claudecodecurso.com/frameworks-agenticos.html",
+    "name": "Frameworks agénticos para Claude Code: Superpowers, gentle-ai",
+    "snippet": "El ecosystem configurator de Alan Buscaglia (Gentleman-Programming). Toma cualquier agente de IA y lo transforma en una estación de trabajo SDD completa con ...",
+    "host_name": "www.claudecodecurso.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

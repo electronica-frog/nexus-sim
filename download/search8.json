@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.youtube.com/watch?v=KILEn2VSXX8&vl=en-US",
+    "name": "The SECRET to stopping AI from outputting GARBAGE - YouTube",
+    "snippet": "The SECRET to stopping AI from outputting GARBAGE: End-to-End Spec-Driven Development · Comments.",
+    "host_name": "www.youtube.com",
+    "rank": 0,
+    "date": "Jun 1, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/@GentlemanProgramming/videos",
+    "name": "Gentleman Programming - YouTube",
+    "snippet": "The SECRET to stopping AI from outputting GARBAGE: End-to-End Spec-Driven Development. 6.1K views. 7 hours ago · 9:10. AI is NOT replacing you: YOU replace ...",
+    "host_name": "www.youtube.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=Uij4ZAojGH8",
+    "name": "Advanced React! The basics you NEED to know - Change detection",
+    "snippet": "The SECRET to stopping AI from outputting GARBAGE: End-to-End Spec-Driven Development. Gentleman Programming•3.1K views. New. Auto-dubbed.",
+    "host_name": "www.youtube.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/ChatGPTCoding/comments/1otf3xc/does_anyone_use_specdriven_development",
+    "name": "Does anyone use spec-driven development? : r/ChatGPTCoding",
+    "snippet": "Spec-driven development is the evolution beyond vibe coding. Instead creating code from single prompt, you begin with a clear specification.",
+    "host_name": "www.reddit.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://medium.com/@manavghosh/spec-driven-development-a-strategic-framework-for-ai-driven-innovation-f7c00844a6d0",
+    "name": "Spec Driven Development: A Strategic Framework for AI  - Medium",
+    "snippet": "1. **Misalignment Between AI and Specifications**: If AI output doesn't match specifications, review the inputs and refine the prompts. Ensure ...",
+    "host_name": "medium.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.linkedin.com/posts/bryan-finster_boring-anti-ai-argument-27-ai-unlike-activity-7401612114953760768-JCc2",
+    "name": "Bryan Finster - Boring anti-AI argument #27 - LinkedIn",
+    "snippet": "Boring anti-AI argument #27: \"AI, unlike developers, writes unmaintainable garbage code.\" This is a straw-man argument that assumes both ...",
+    "host_name": "www.linkedin.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://blog.devgenius.io/the-spec-is-the-code-why-i-dont-buy-spec-driven-design-f75c784f7b46",
+    "name": "Code over Specs: why I don't buy Spec-Driven Design - Dev Genius",
+    "snippet": "Start small. Ask the AI to build a simple Proof of Concept (POC) to just log the incoming payload. Run it. Observe how the provider actually ...",
+    "host_name": "blog.devgenius.io",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=7iQthHou_4M",
+    "name": "Don't Let AI Trash Your Codebase - YouTube",
+    "snippet": "As coding agents become a daily part of development, many teams risk drowning ... In this session, we explore the surprising ways AI undermines ...",
+    "host_name": "www.youtube.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://aliirz.com/why-your-ai-is-guessing",
+    "name": "Spec-Driven Development with AI: Why Your AI Is Guessing (And",
+    "snippet": "Spec-Driven Development with AI: Why Your AI Is Guessing (And How to Stop It) ... More often it's plausible garbage that takes longer to fix than ...",
+    "host_name": "aliirz.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://blog.stackademic.com/garbage-in-garbage-out-defining-ais-real-role-in-the-sdlc-554db82f9cf7",
+    "name": "Garbage In, Garbage Out: Defining AI's Real Role in the SDLC",
+    "snippet": "The operating rule is simple: point AI at work where a wrong answer is cheap and easy to catch locally, and keep it away from anything systemic.",
+    "host_name": "blog.stackademic.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

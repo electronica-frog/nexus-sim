@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://arxiv.org/html/2601.13671v1",
+    "name": "The Orchestration of Multi-Agent Systems: Architectures, Protocols",
+    "snippet": "Orchestrated multi-agent systems represent the next stage in the evolution of artificial intelligence, where autonomous agents collaborate ...",
+    "host_name": "arxiv.org",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.ibm.com/think/topics/ai-agent-orchestration",
+    "name": "What is AI Agent Orchestration? - IBM",
+    "snippet": "AI agent orchestration is the process of coordinating multiple specialized AI agents within a unified system to efficiently achieve shared objectives.",
+    "host_name": "www.ibm.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.codebridge.tech/articles/mastering-multi-agent-orchestration-coordination-is-the-new-scale-frontier",
+    "name": "Multi-Agent Systems & AI Orchestration Guide 2026 - Codebridge",
+    "snippet": "Learn about multi-agent AI architecture, orchestration, frameworks, step-by-step workflow implementation, and scalable multi-agent collaboration.",
+    "host_name": "www.codebridge.tech",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://redwerk.com/blog/best-multi-agent-ai-frameworks",
+    "name": "10 Best Multi-Agent AI Frameworks & Orchestration Platforms in 2026",
+    "snippet": "Redwerk experts selected the top multi-agent AI frameworks for developers who want code-level control, and AI agent orchestration platforms ...",
+    "host_name": "redwerk.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.linkedin.com/posts/krishna-reddy-780a7286_the-4-agent-frameworks-that-will-define-ai-activity-7399658658479050752-klhL",
+    "name": "The 4 Agent Frameworks That Will Define AI Systems in 2026",
+    "snippet": "Here are the frameworks leading that shift: 1, LangGraph • Graph-native, stateful agent architecture • Built for persistent memory, multi-agent ...",
+    "host_name": "www.linkedin.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.talkdesk.com/blog/multi-agent-orchestration",
+    "name": "What is Multi-Agent Orchestration? An Overview - Talkdesk",
+    "snippet": "Learn what multi-agent orchestration is, how it works, and how it helps coordinate AI agents for streamlined, efficient workflows.",
+    "host_name": "www.talkdesk.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://monday.com/blog/ai-agents/ai-agent-frameworks",
+    "name": "AI Agent Frameworks: Top 7 Picks for 2026 - Monday.com",
+    "snippet": "Compare the top I agent frameworks – LangGraph, CrewAI, AutoGen, and more – to find the right fit for your team.",
+    "host_name": "monday.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.getmaxim.ai/articles/top-5-prompt-orchestration-platforms-for-ai-agents-in-2026",
+    "name": "Top 5 Prompt Orchestration Platforms for AI Agents in 2026 - Maxim AI",
+    "snippet": "CrewAI is a specialized multi-agent orchestration framework that emphasizes role-based agent collaboration. Unlike general-purpose ...",
+    "host_name": "www.getmaxim.ai",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://redis.io/blog/ai-agent-orchestration-platforms",
+    "name": "Compare top 8 AI agent orchestration platforms now - Redis",
+    "snippet": "CrewAI with Redis. CrewAI is a Python-based, open-source framework for orchestrating role-playing autonomous AI agents into collaborative teams.",
+    "host_name": "redis.io",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.superannotate.com/blog/multi-agent-llms",
+    "name": "Multi-agent LLMs in 2026 [+frameworks] - SuperAnnotate",
+    "snippet": "CrewAI manages autonomous AI agents that work together to solve tasks efficiently. Below is a graph showing how this works. crewai langgraph.",
+    "host_name": "www.superannotate.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

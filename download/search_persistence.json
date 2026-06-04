@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.reddit.com/r/AI_Agents/comments/1qdhsve/how_i_solved_persistent_memory_for_ai_agents",
+    "name": "How I solved persistent memory for AI agents without fine-tuning",
+    "snippet": "Its just structured memory that persists across sessions and you have full visibility into what the agent knows about you. Built it with Next.js ...",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=vfVcDUCucSs&vl=en-US",
+    "name": "How to add short-term memory to your AI agent (Sessions & State",
+    "snippet": "... between agents with agent short term memory. Annie breaks down short ... stay tuned for episodes on persistent memory and long-term memory!",
+    "host_name": "www.youtube.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://mem0.ai/blog/memory-in-agents-what-why-and-how",
+    "name": "Memory in Agents: What, Why and How - Mem0",
+    "snippet": "LLM memory gives language models persistent context across sessions. Learn how it works, how it differs from RAG and context windows, ...",
+    "host_name": "mem0.ai",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://vectorize.io/articles/do-ai-agents-learn-between-sessions",
+    "name": "Do AI Agents Learn Between Sessions? The Honest Answer",
+    "snippet": "Do AI agents learn between sessions? By default, no — the model is stateless. Here's why, what memory means, and how to give your agent real ...",
+    "host_name": "vectorize.io",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://lm-kit.com/solutions/ai-agents/agent-memory",
+    "name": "Private, persistent memory for .NET AI agents. Semantic  - LM-Kit",
+    "snippet": "HIPAA and GDPR ready. Persistent across sessions. Serialize memory to disk and restore it at any time. Share memory states between agents and deployments.",
+    "host_name": "lm-kit.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=ZY5WXDDp9g8",
+    "name": "Solving LLM Amnesia: Cross Session Memory - YouTube",
+    "snippet": "... memory across multiple conversations with AI chatbots and demonstrates how to implement long-term memory using Agents for Amazon Bedrock ...",
+    "host_name": "www.youtube.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://medium.com/@Micheal-Lanham/ai-agents-that-remember-building-long-term-memory-systems-dff6e6b7cdae",
+    "name": "AI Agents That Remember: Building Long-Term Memory Systems",
+    "snippet": "There's no persistence between sessions. No Learning Mechanism: Traditional AI agents don't have a way to accumulate knowledge from past ...",
+    "host_name": "medium.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.linkedin.com/posts/progressivethinker_llms-dont-remember-past-sessions-agents-activity-7360868394532806656-ezA3",
+    "name": "LLMs don't remember past sessions, agents do. | Pallavi Ahuja",
+    "snippet": "LLMs don't remember past sessions, agents do. A raw large language model has no persistence. Every prompt you send is processed in isolation ...",
+    "host_name": "www.linkedin.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://blogs.oracle.com/developers/agent-memory-why-your-ai-has-amnesia-and-how-to-fix-it",
+    "name": "Agent Memory: Why Your AI Has Amnesia and How to Fix It",
+    "snippet": "It's fast but volatile; close the session and it's gone. Long-term memory encompasses everything that persists across sessions: semantic memory ...",
+    "host_name": "blogs.oracle.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://arxiv.org/pdf/2504.19413?",
+    "name": "[PDF] Mem0: Building Production-Ready AI Agents with - arXiv",
+    "snippet": "Our findings highlight the critical role of structured, persistent memory mechanisms for long-term conversational coherence, paving the way for ...",
+    "host_name": "arxiv.org",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]
