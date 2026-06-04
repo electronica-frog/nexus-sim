@@ -146,6 +146,31 @@ export interface LiveAgentState {
   pipelineStep?: string
 }
 
+export interface SharedLearning {
+  id: string
+  agentName: string
+  agentEmoji: string
+  agentDivision: string
+  waveType: string
+  content: string
+  tags: string[]
+  importance: number
+  type: string
+  createdAt: string
+}
+
+export interface MemorySearchResult {
+  id: string
+  agentName: string
+  agentEmoji: string
+  agentDivision: string
+  content: string
+  tags: string[]
+  importance: number
+  type: string
+  createdAt: string
+}
+
 export interface DashboardData {
   totalAgents: number; activeAgents: number; idleAgents: number; failedAgents: number;
   totalWaves: number; completedWaves: number; failedWaves: number;

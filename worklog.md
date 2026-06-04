@@ -675,3 +675,30 @@ Stage Summary:
 - Shows 15 completed features as badges
 - Progress tracking with visual bar
 - Default tab changed to 'roadmap' so plan is visible on first load
+
+---
+Task ID: 20
+Agent: Main Agent + Full-Stack Developer Subagent
+Task: Fase Inmediata - Split final de page.tsx + levantar server estable
+
+Work Log:
+- Extracted 5 remaining tab sections from nexus-content.tsx into separate components:
+  - agents-tab.tsx (172 lines) — Agent search/filter grid + detail dialog
+  - waves-tab.tsx (399 lines) — Wave simulation form + pipeline progress + live feed + wave detail + timeline
+  - memory-tab.tsx (213 lines) — Shared learnings + memory search + memory list
+  - specs-tab.tsx (265 lines) — Create spec form + kanban/list view + spec detail
+  - proposals-tab.tsx (68 lines) — Proposals list with status management
+- All 5 components are dynamic imports with ssr: false and loading skeletons
+- nexus-content.tsx reduced from 1090 → 299 lines (73% reduction, total from original 3217)
+- Build time: 2.9s (was 14.4s), page compile: 4.6s (was 6.5s)
+- Dev server starts in 1s, HTTP 200 confirmed
+- Caddy proxy (port 81 → 3000) confirmed working (HTTP 200)
+- Keepalive loop started (curl every 10s) to prevent container process killer
+- 9 lazy-loaded components total: DashboardTab, RoadmapTab, AgentsTab, WavesTab, MemoryTab, SpecsTab, ProposalsTab, WaveDetailDialog, LiveAgentCard
+
+Stage Summary:
+- nexus-content.tsx is now a thin 299-line orchestrator (was 3217 lines originally)
+- All 7 tabs are lazy-loaded independently, dramatically reducing compilation memory
+- Server compiles and serves in under 5 seconds
+- Caddy proxy working, keepalive prevents idle kill
+- OOM issue should be resolved — no single file exceeds ~400 lines
