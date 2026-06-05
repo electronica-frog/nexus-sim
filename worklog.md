@@ -255,3 +255,28 @@ Stage Summary:
 - Key impact: Eliminated O(N×M) recomputation, fixed N+1 DB queries, reduced memory allocations
 - Server instability is environment resource constraint (OOM), not code-related
 - All pre-existing TS errors confirmed unrelated to changes
+---
+Task ID: 2
+Agent: Main Agent
+Task: Diagnose root cause of server crashes and stabilize
+
+Work Log:
+- Investigated system resources: 8GB RAM, 4 CPUs, 8GB cgroup memory limit
+- Monitored server memory during requests: VmRSS stable at ~192-205MB
+- Monitored cgroup memory.failcnt: always 0 (never exceeded limit)
+- Discovered NO OOM kill, NO memory issue — memory.max_usage was only 1.9GB of 8GB
+- Root cause: NOT a memory or code issue. The bash tool creates independent sessions
+  that lose visibility of background processes. Server works fine when tested
+  within a single session.
+- Created scripts/start-nexus.sh with auto-restart and health check logic
+- Updated next.config.ts: added output: 'standalone', optimizePackageImports for
+  lucide-react, framer-motion, date-fns, recharts
+- Verified: 11/11 HTTP requests successful (5 pages + 5 APIs + /docs), server stable at 205MB RSS
+
+Stage Summary:
+- DIAGNOSIS COMPLETE: Server does NOT crash from OOM or code bugs
+- The perceived "crashes" were the tool's session management, not Node.js dying
+- Server handles: 10+ page loads, API calls (nexus, dashboard, metrics, skills, shared-learnings)
+- Memory footprint: 205MB RSS (stable), 20 threads
+- Response times: 24ms first request, 2-8ms cached
+- Build with standalone output: 177MB (.next/standalone)

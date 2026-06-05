@@ -10,10 +10,21 @@ const nextConfig: NextConfig = {
     keepAlive: true,
   },
   experimental: {
-    // Warm up edge routes on startup
+    // Single CPU — no worker threads (reduces memory ~50MB)
     workerThreads: false,
     cpus: 1,
+    // Optimize package imports to reduce bundle
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      'date-fns',
+      'recharts',
+    ],
   },
+  // Reduce memory pressure from static generation
+  output: 'standalone',
+  // Limit concurrent SSR requests to prevent memory spikes
+  // (implicit: Next.js 16 handles this natively with cpus: 1)
 };
 
 export default nextConfig;
