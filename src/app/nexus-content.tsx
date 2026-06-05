@@ -30,6 +30,7 @@ const MemoryTab = dynamic(() => import('@/components/nexus/memory-tab').then(m =
 const SpecsTab = dynamic(() => import('@/components/nexus/specs-tab').then(m => ({ default: m.SpecsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const ProposalsTab = dynamic(() => import('@/components/nexus/proposals-tab').then(m => ({ default: m.ProposalsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const Mem0Tab = dynamic(() => import('@/components/nexus/mem0-tab').then(m => ({ default: m.Mem0Tab })), { loading: () => <div className="h-64 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
+const CrewAITab = dynamic(() => import('@/components/nexus/crew-ai-tab').then(m => ({ default: m.CrewAITab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 
 // ===== Main Component =====
 export default function NexusContent() {
@@ -215,6 +216,7 @@ export default function NexusContent() {
                 <TabsTrigger value="mem0" className="data-[state=active]:bg-zinc-800"><Brain className="h-3.5 w-3.5 mr-1.5" />Mem0</TabsTrigger>
                 <TabsTrigger value="specs" className="data-[state=active]:bg-zinc-800"><ClipboardList className="h-3.5 w-3.5 mr-1.5" />Specs</TabsTrigger>
                 <TabsTrigger value="proposals" className="data-[state=active]:bg-zinc-800"><Target className="h-3.5 w-3.5 mr-1.5" />Propuestas</TabsTrigger>
+                <TabsTrigger value="crew" className="data-[state=active]:bg-zinc-800"><Users className="h-3.5 w-3.5 mr-1.5" />CrewAI</TabsTrigger>
               </TabsList>
 
               {/* ===== ROADMAP TAB ===== */}
@@ -351,6 +353,11 @@ export default function NexusContent() {
                   updateSpecPriority={updateSpecPriority}
                   deleteSpec={deleteSpec}
                 />
+              </TabsContent>
+
+              {/* ===== CREW AI TAB ===== */}
+              <TabsContent value="crew" className="space-y-4">
+                <CrewAITab projectId={project.id} />
               </TabsContent>
 
               {/* ===== PROPOSALS TAB ===== */}

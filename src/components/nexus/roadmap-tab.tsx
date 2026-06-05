@@ -155,20 +155,20 @@ const ROADMAP_PHASES: RoadmapPhase[] = [
       {
         id: 'crewai',
         title: 'CrewAI / AutoGen — Orquestacion Multi-Agente Avanzada',
-        description: 'Integrar con un framework externo de orquestacion para flujos complejos con roles, jerarquias y delegacion entre agentes.',
-        status: 'future',
-        tech: 'CrewAI / Microsoft AutoGen (open-source)',
+        description: 'Sistema de orquestacion con crews, roles jerarquicos, delegacion, tareas secuenciales/paralelas y ejecucion automatizada.',
+        status: 'done',
+        tech: 'orchestrator.ts / CrewAI Tab / 5 Templates / 7 Roles / 4 Strategies',
         icon: Users,
-        details: 'CrewAI permite definir "crews" de agentes con roles (Leader, Researcher, Writer) y tareas jerarquicas. AutoGen permite conversaciones multi-turno human-in-the-loop.',
+        details: '5 templates predefinidos (Research & Write, Code Dev, Brainstorm, Analysis Report, Auto-Pilot). 7 roles (leader, researcher, writer, reviewer, coder, analyst, executor). 4 estrategias (sequential, hierarchical, parallel, delegative). Generador automatico de planes de tareas. Ejecucion simulada con logging. Tab UI completo con visualizacion de plan.',
       },
       {
         id: 'mcp-full',
         title: 'MCP Protocol Completo — Full Tool Server',
         description: 'Expandir el endpoint MCP basico a un tool server completo que permita a NEXUS conectar con IDEs, CLIs, APIs externas y otros servicios.',
-        status: 'future',
-        tech: 'MCP Protocol / JSON-RPC',
+        status: 'done',
+        tech: 'MCP Protocol / JSON-RPC / 16 Tools / 9 Resources / 4 Prompts',
         icon: Plug,
-        details: 'Actualmente hay 6 herramientas basicas. MCP completo permite: acceso a filesystem, llamadas HTTP, integracion con VS Code, Claude Desktop, etc.',
+        details: '16 herramientas (waves, agents, specs, memory, proposals, export, system health). 9 recursos legibles (dashboard, agents, waves, mem0, specs, proposals, trust-network, activity-log, system-health). 4 prompts predefinidos (brainstorm, code_review, project_plan, retrospective). Compatible con Claude Desktop y VS Code MCP.',
       },
     ],
   },
@@ -238,6 +238,8 @@ const COMPLETED_FEATURES = [
   { name: 'Socket.io code (server + client)', icon: Radio },
   { name: 'Docker Containerization', icon: Container },
   { name: 'Banner "Cómo Funciona Esto"', icon: CheckCircle2 },
+  { name: 'MCP Full Server (16 tools)', icon: Plug },
+  { name: 'CrewAI Orquestación', icon: Users },
 ]
 
 function getStatusConfig(status: RoadmapItem['status']) {
@@ -301,7 +303,7 @@ export function RoadmapTab() {
           <div>
             <h3 className="text-sm font-medium text-zinc-200 mb-3 flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              Ya Construido (18 fases completadas)
+              Ya Construido (24 fases completadas)
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {COMPLETED_FEATURES.map((feat, i) => {
