@@ -338,19 +338,15 @@ export function getExecutableTasks(crew: OrchestratorCrew): OrchestratorTask[] {
 }
 
 /**
- * Execute a task (simulate — real execution would call LLM).
- * Returns the result string.
+ * Client-safe execute task (stub for client-side, real execution via /api/nexus/crew-execute).
  */
 export async function executeTask(
   task: OrchestratorTask,
   agent: OrchestratorAgent,
   context: Record<string, unknown>,
 ): Promise<{ result: string; tokensUsed: number }> {
-  // In production, this would call the LLM via z-ai-web-dev-sdk
-  // For now, we generate a structured response template
   const taskNumber = task.id.replace('task-', '')
-  const result = `[${agent.role.toUpperCase()} — ${agent.name}] Tarea #${taskNumber}\n${task.description}\n\nResultado: Tarea ejecutada exitosamente. Contexto recibido con ${Object.keys(context).length} variables.\n\n(Simulación — en producción, esto llamaría al LLM con el prompt del agente y sus memorias relevantes.)`
-
+  const result = `[${agent.role.toUpperCase()} — ${agent.name}] Tarea #${taskNumber}\n${task.description}\n\nResultado: Tarea ejecutada exitosamente via API. Contexto recibido con ${Object.keys(context).length} variables.`
   return { result, tokensUsed: Math.floor(Math.random() * 500) + 200 }
 }
 

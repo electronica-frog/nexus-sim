@@ -341,8 +341,8 @@ async function handleToolsCall(params: { name: string; arguments: Record<string,
       const { projectId, division, limit } = a
       const where: Record<string, unknown> = { projectId: projectId as string }
       if (division) where.agent = { division: division as string }
-      const pas = await db.projectAgent.findMany({ where, include: { agent: { select: { name: true, division: true, emoji: true, bio: true } } }, take: (limit as number) || 20, orderBy: { trustScore: 'desc' } })
-      const text = pas.map((pa) => `${pa.agent.emoji} ${pa.agent.name} (${pa.agent.division}) trust: ${Math.round((pa.trustScore ?? 0.5) * 100)}% — ${pa.agent.bio?.slice(0, 80) || 'Sin bio'}`).join('\n')
+      const pas = await db.projectAgent.findMany({ where, include: { agent: { select: { name: true, division: true, emoji: true, personality: true } } }, take: (limit as number) || 20, orderBy: { trustScore: 'desc' } })
+      const text = pas.map((pa) => `${pa.agent.emoji} ${pa.agent.name} (${pa.agent.division}) trust: ${Math.round((pa.trustScore ?? 0.5) * 100)}% — ${pa.agent.personality?.slice(0, 80) || 'Sin personalidad'}`).join('\n')
       return mcpResult([{ type: 'text', text: text || 'Sin agentes' }])
     }
 
@@ -351,7 +351,7 @@ async function handleToolsCall(params: { name: string; arguments: Record<string,
       if (!agentId) return mcpError(-32602, 'Se requiere agentId')
       const agent = await db.agent.findUnique({ where: { id: agentId as string }, include: { projectAgents: { take: 1 }, skills: { take: 5 } } })
       if (!agent) return mcpError(-32602, 'Agente no encontrado')
-      const text = `${agent.emoji} ${agent.name} (${agent.division})\nBio: ${agent.bio}\nSkills: ${agent.skills.map((s) => s.name).join(', ') || 'N/A'}\nTrust (last project): ${agent.projectAgents[0] ? Math.round((agent.projectAgents[0].trustScore ?? 0.5) * 100) + '%' : 'N/A'}`
+      const text = `${agent.emoji} ${agent.name} (${agent.division})\nPersonalidad: ${agent.personality?.slice(0, 120) || 'N/A'}\nSkills: ${agent.skills.map((s) => s.name).join(', ') || 'N/A'}\nTrust (last project): ${agent.projectAgents[0] ? Math.round((agent.projectAgents[0].trustScore ?? 0.5) * 100) + '%' : 'N/A'}`
       return mcpResult([{ type: 'text', text }])
     }
 
@@ -426,7 +426,7 @@ async function handleToolsCall(params: { name: string; arguments: Record<string,
       const where: Record<string, unknown> = { projectId: projectId as string }
       if (status) where.status = status
       const proposals = await db.proposal.findMany({ where, orderBy: { createdAt: 'desc' }, take: 10 })
-      const text = proposals.map((p) => `"${p.title}" [${p.status}] — ${p.summary?.slice(0, 80) || 'Sin resumen'}`).join('\n')
+      const text = proposals.map((p) => `"${p.title}" [${p.status}] — ${p.description?.slice(0, 80) || 'Sin descripción'}`).join('\n')
       return mcpResult([{ type: 'text', text: text || 'Sin propuestas' }])
     }
 
@@ -491,7 +491,7 @@ async function handleResourcesRead(uri: string, projectId?: string) {
       return mcpResult([{ type: 'text', text: JSON.stringify(network, null, 2) }])
     }
     case 'nexus://activity-log': {
-      const logs = await db.activityLog.findMany({ where: { projectId }, orderBy: { timestamp: 'desc' }, take: 30 })
+      const logs = await db.systemLog.findMany({ where: { projectId }, orderBy: { createdAt: 'desc' }, take: 30 })
       return mcpResult([{ type: 'text', text: JSON.stringify(logs, null, 2) }])
     }
     case 'nexus://system-health': {

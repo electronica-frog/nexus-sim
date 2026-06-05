@@ -185,10 +185,10 @@ const ROADMAP_PHASES: RoadmapPhase[] = [
         id: 'eval-auto',
         title: 'Evaluacion Automatica con LLM Judges',
         description: 'Meta-evaluacion: agentes "juez" especializados que puntuan automaticamente la calidad de cada oleada, creando un loop de mejora continua.',
-        status: 'future',
-        tech: 'z-ai-web-dev-sdk / Prompt Engineering',
+        status: 'done',
+        tech: 'z-ai-web-dev-sdk / llm-judge.ts / 5 Dimensiones / Trust Feedback Loop',
         icon: Gavel,
-        details: 'Despues de cada oleada, un agente juez evalua: relevancia, profundidad, creatividad, coherencia con contexto. Los resultados alimentan trust scores y auto-mejora.',
+        details: 'Evaluacion en 5 dimensiones ponderadas: Relevancia (0.25), Profundidad (0.25), Creatividad (0.20), Coherencia (0.15), Accionabilidad (0.15). Resultados alimentan trust scores automaticamente. Highlights de mejores/peores agentes. Historial de evaluaciones con score global. Fallback a metricas heuristicas si LLM no disponible.',
       },
       {
         id: 'multi-proyecto',
@@ -240,6 +240,7 @@ const COMPLETED_FEATURES = [
   { name: 'Banner "Cómo Funciona Esto"', icon: CheckCircle2 },
   { name: 'MCP Full Server (16 tools)', icon: Plug },
   { name: 'CrewAI Orquestación', icon: Users },
+  { name: 'LLM Judges (5 dimensiones)', icon: Gavel },
 ]
 
 function getStatusConfig(status: RoadmapItem['status']) {
@@ -303,7 +304,7 @@ export function RoadmapTab() {
           <div>
             <h3 className="text-sm font-medium text-zinc-200 mb-3 flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              Ya Construido (24 fases completadas)
+              Ya Construido (25 fases completadas)
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {COMPLETED_FEATURES.map((feat, i) => {
