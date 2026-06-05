@@ -42,6 +42,10 @@ bun-debug.log*
 
 # Prisma
 db/*.db-journal
+prisma/*.db-journal
+*.db
+*.db-wal
+*.db-shm
 
 # IDE
 .vscode/
@@ -61,10 +65,28 @@ upload/
 # OS
 Thumbs.db
 
-# Project-specific
+# ChromaDB Vector Store
+.chroma-data/
+
+# Python virtual environment
+.venv/
+
+# ONNX model cache
+/home/z/.cache/chroma/
+
+# NEXUS project-specific
 .claude
 .z-ai-config
 local-*
 test
 prompt
 /skills/
+
+# Worklog (generated)
+worklog.md
+
+# Download artifacts
+/download/
+
+# Temp/agent context
+/agent-ctx/
