@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { seedAgents } from '@/lib/seed'
-import ZAI from 'z-ai-web-dev-sdk'
-import { updateTrustAfterWave } from '@/lib/trust'
 import { buildMemoryContent, buildMemoryTags, calculateImportance, formatSharedLearnings } from '@/lib/semantic-memory'
-import { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } from '@/lib/skills'
 import { buildSearchIndex, search, computeTFIDFVector, vectorToJson } from '@/lib/vector-search'
-import { addToCollection, getCollectionCount, resetCollection } from '@/lib/chroma-store'
 
 const WAVE_TEMPERATURES: Record<string, number> = {
   brainstorm: 0.9,
@@ -40,6 +35,7 @@ async function callLLM(data: {
   prompt: string; memories?: string[]; previousResponses?: string[];
   agentEmoji?: string; agentVibe?: string;
 }): Promise<{ content: string; confidence: number; mood: string }> {
+  const { default: ZAI } = await import('z-ai-web-dev-sdk')
   const zai = await ZAI.create()
   const { agentName, agentPersonality, waveType, prompt, memories = [], previousResponses = [] } = data
   const agentEmoji = data.agentEmoji || '🤖'
@@ -84,6 +80,7 @@ export const dynamic = 'force-dynamic'
 // ===== POST /api/nexus - Seed agents =====
 async function handleSeed() {
   try {
+    const { seedAgents } = await import('@/lib/seed')
     const result = await seedAgents()
     return NextResponse.json({ success: true, ...result })
   } catch (error) {
@@ -287,6 +284,7 @@ async function handleDeleteSpec(request: NextRequest) {
 
 // ===== POST /api/nexus/wave - Run a wave =====
 async function handleRunWave(request: NextRequest) {
+  const { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } = await import('@/lib/skills')
   const body = await request.json()
   const { projectId, type, prompt, selectedAgentIds, specId } = body
 
@@ -515,6 +513,7 @@ async function handleRunWave(request: NextRequest) {
   }
 
   // Update trust scores after wave
+  const { updateTrustAfterWave } = await import('@/lib/trust')
   await updateTrustAfterWave(wave.id, projectId)
 
   let result = null
@@ -776,6 +775,7 @@ async function handleGetSharedLearnings(request: NextRequest) {
 
 async function handleGetChromaIndex() {
   try {
+    const { getCollectionCount } = await import('@/lib/chroma-store')
     const memoriesCount = getCollectionCount('nexus-memories')
     const skillsCount = getCollectionCount('nexus-skills')
     return NextResponse.json({
@@ -790,6 +790,7 @@ async function handleGetChromaIndex() {
 
 async function handlePostChromaIndex(request: NextRequest) {
   try {
+    const { addToCollection, getCollectionCount, resetCollection } = await import('@/lib/chroma-store')
     const searchParams = request.nextUrl.searchParams
     const projectId = searchParams.get('projectId')
     const forceReset = searchParams.get('reset') === 'true'

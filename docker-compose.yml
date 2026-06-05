@@ -30,7 +30,7 @@ services:
       - chroma-data:/app/.chroma-data
     expose:
       - "3000"
-    mem_limit: 512m
+    mem_limit: 1024m
     cpus: 1.0
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]

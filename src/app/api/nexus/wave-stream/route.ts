@@ -1,13 +1,6 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { callLLM, VALID_WAVE_TYPES, DIVISION_MAP } from '@/lib/nexus-wave'
-import { updateTrustAfterWave } from '@/lib/trust'
-import { buildMemoryContent, buildMemoryTags, calculateImportance, formatSharedLearnings } from '@/lib/semantic-memory'
-import { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } from '@/lib/skills'
-import { addLog } from '@/lib/system-logs'
-import { computeTFIDFVector, vectorToJson } from '@/lib/vector-search'
-import { emitWaveStarted, emitWaveAgentResponding, emitWaveCompleted } from '@/lib/event-bus'
-import { getRelevantMemories, formatMemoryContext, touchMemories, extractAndStoreWaveMemories } from '@/lib/memory-store'
+import { VALID_WAVE_TYPES, DIVISION_MAP } from '@/lib/nexus-wave'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes for LLM calls
@@ -41,6 +34,16 @@ export async function POST(request: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      // Dynamic imports — loaded on demand, not at module evaluation
+      const { callLLM } = await import('@/lib/nexus-wave')
+      const { updateTrustAfterWave } = await import('@/lib/trust')
+      const { buildMemoryContent, buildMemoryTags, calculateImportance, formatSharedLearnings } = await import('@/lib/semantic-memory')
+      const { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality, extractSkillsFromWave } = await import('@/lib/skills')
+      const { addLog } = await import('@/lib/system-logs')
+      const { computeTFIDFVector, vectorToJson } = await import('@/lib/vector-search')
+      const { emitWaveStarted, emitWaveAgentResponding, emitWaveCompleted } = await import('@/lib/event-bus')
+      const { getRelevantMemories, formatMemoryContext, touchMemories, extractAndStoreWaveMemories } = await import('@/lib/memory-store')
+
       try {
         let projectAgents
         if (selectedAgentIds && selectedAgentIds.length > 0) {
