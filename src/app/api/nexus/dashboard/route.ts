@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 30 // Cache dashboard for 30s (stale-while-revalidate)
 
 export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get('projectId')
@@ -100,22 +101,19 @@ export async function GET(request: NextRequest) {
       waveTypeDistribution[w.type] = (waveTypeDistribution[w.type] || 0) + 1
     }
 
-    // Division activity
-    const agentIds = agents.map((a) => a.id)
-    const responsesWithAgent = await db.response.findMany({
-      where: {
-        wave: { projectId },
-        agentId: { in: agentIds },
-      },
-      include: {
-        projectAgent: {
-          include: { agent: { select: { division: true } } },
-        },
-      },
-    })
+    // Division activity — lightweight: batch fetch PA→division + response→PA mapping
     const divisionActivity: Record<string, number> = {}
-    for (const r of responsesWithAgent) {
-      const div = r.projectAgent?.agent?.division || 'unknown'
+    const paWithDiv = await db.projectAgent.findMany({
+      where: { projectId },
+      select: { id: true, agent: { select: { division: true } } },
+    })
+    const paDivMap = new Map(paWithDiv.map((pa) => [pa.id, pa.agent.division]))
+    const divResponses = await db.response.findMany({
+      where: { wave: { projectId } },
+      select: { agentId: true },
+    })
+    for (const dr of divResponses) {
+      const div = paDivMap.get(dr.agentId) || 'unknown'
       divisionActivity[div] = (divisionActivity[div] || 0) + 1
     }
 

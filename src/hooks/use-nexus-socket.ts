@@ -78,8 +78,9 @@ export function useNexusSocket(
 
     socket.on(SOCKET_EVENTS.REMOTE_FOCUS, (data: { socketId: string; agentId: string; agentName: string }) => {
       setRemoteFocus({ agentId: data.agentId, agentName: data.agentName, socketId: data.socketId })
-      // Auto-clear after 3 seconds
-      setTimeout(() => setRemoteFocus(null), 3000)
+      // Auto-clear after 3 seconds (store ref for cleanup)
+      const timer = setTimeout(() => setRemoteFocus(null), 3000)
+      ;(socket as unknown as Record<string, unknown>)._focusTimer = timer
     })
 
     socket.on('disconnect', () => {
@@ -89,6 +90,9 @@ export function useNexusSocket(
     })
 
     return () => {
+      // Clear pending focus timer
+      const pendingTimer = (socket as unknown as Record<string, unknown>)._focusTimer as ReturnType<typeof setTimeout> | undefined
+      if (pendingTimer) clearTimeout(pendingTimer)
       socket.disconnect()
       socketRef.current = null
       setConnected(false)

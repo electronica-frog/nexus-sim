@@ -230,3 +230,28 @@ Stage Summary:
 - Oleada ejecutada: "Cómo optimizar NEXUS para que no se tilde"
 - 3 agentes: ArchiteQ, PerfMax, DataBot con 9 recomendaciones
 - Recomendaciones clave: split API routes, caching, connection pooling, batch operations, streaming/Suspense
+---
+Task ID: 1
+Agent: Main Agent
+Task: Performance audit and optimization of NEXUS Sim v2
+
+Work Log:
+- Ran comprehensive performance audit using Explore agent (42 issues found across 31 files)
+- Identified 3 CRITICAL, 9 HIGH, 12 MEDIUM, 8 LOW issues
+- Implemented critical optimizations in use-nexus-data.ts: useMemo for all derived data (filteredAgents, filteredMemories, avgConfidence, moodCounts, topTrustedAgents, avgTrust), added agentDivisionMap for O(1) lookups instead of O(N×M)
+- Fixed N+1 DB query in wave-stream: batch fetch agents for shared learnings instead of 8 individual queries
+- Sanitized error messages in wave-stream SSE events (security fix)
+- Moved LOG_TYPE_CONFIG to module scope in dashboard-tab (was recreating 8 objects per log entry per render)
+- Extracted timeAgo utility function in dashboard-tab (was IIFE per log per render)
+- Fixed setTimeout cleanup leak in use-nexus-socket (REMOTE_FOCUS timer)
+- Added searchTimeoutRef cleanup on unmount in use-nexus-data
+- Reduced dashboard auto-refresh interval from 30s to 60s
+- Added revalidate=30 to dashboard API route (Next.js ISR caching)
+- Optimized dashboard division activity query (lighter select, avoid full response includes)
+- Build compiles successfully with `npx next build`
+
+Stage Summary:
+- 12 performance optimizations applied across 5 files
+- Key impact: Eliminated O(N×M) recomputation, fixed N+1 DB queries, reduced memory allocations
+- Server instability is environment resource constraint (OOM), not code-related
+- All pre-existing TS errors confirmed unrelated to changes

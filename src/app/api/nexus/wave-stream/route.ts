@@ -120,21 +120,24 @@ export async function POST(request: NextRequest) {
           take: 10,
         })
 
-        // Enrich shared learnings with agent info
-        const sharedLearningsAgents = await Promise.all(
-          sharedLearningsRaw.slice(0, 8).map(async (m) => {
-            const agent = await db.agent.findUnique({ where: { id: m.agentId } })
-            const tagsArr = m.tags.split(',')
-            const waveType = tagsArr.find((t) => ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate'].includes(t)) || 'unknown'
-            return {
-              agentName: agent?.name || 'Desconocido',
-              agentEmoji: agent?.emoji || '🤖',
-              content: m.content,
-              waveType,
-              importance: m.importance,
-            }
-          }),
-        )
+        // Enrich shared learnings with agent info (batch fetch — avoid N+1)
+        const learningAgentIds = [...new Set(sharedLearningsRaw.slice(0, 8).map((m) => m.agentId))]
+        const learningAgents = learningAgentIds.length > 0
+          ? await db.agent.findMany({ where: { id: { in: learningAgentIds } }, select: { id: true, name: true, emoji: true } })
+          : []
+        const agentMap = new Map(learningAgents.map((a) => [a.id, a]))
+        const sharedLearningsAgents = sharedLearningsRaw.slice(0, 8).map((m) => {
+          const agent = agentMap.get(m.agentId)
+          const tagsArr = m.tags.split(',')
+          const waveType = tagsArr.find((t) => ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate'].includes(t)) || 'unknown'
+          return {
+            agentName: agent?.name || 'Desconocido',
+            agentEmoji: agent?.emoji || '🤖',
+            content: m.content,
+            waveType,
+            importance: m.importance,
+          }
+        })
         const sharedLearningsStr = formatSharedLearnings(sharedLearningsAgents)
 
         // Pre-fetch all agent skills for this project (batch fetch)
@@ -295,14 +298,14 @@ export async function POST(request: NextRequest) {
             })
             responses.push({
               id: 'error',
-              content: `Error generando respuesta: ${String(error)}`,
+              content: 'Error generando respuesta. Intenta de nuevo.',
               confidence: 0,
               mood: 'concerned',
               projectAgent: pa,
             })
             controller.enqueue(encoder.encode(sseEvent('agent_response', {
               agentId: pa.id,
-              content: `Error: ${String(error)}`,
+              content: 'Error: el agente no pudo generar una respuesta.',
               confidence: 0,
               mood: 'concerned',
               agentName: pa.agent.name,

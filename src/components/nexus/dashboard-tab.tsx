@@ -33,6 +33,32 @@ import { WAVE_TYPES, WAVE_COLOR_MAP, WAVE_DOT_COLOR, MOOD_CONFIG, DIVISION_COLOR
 import { StatCard } from '@/components/nexus/stat-card'
 import type { Project, AgentSkill, BenchAgentMetric, BenchAggregates, DashboardData, Wave, Agent } from '@/components/nexus/types'
 
+// Move LOG_TYPE_CONFIG to module scope to avoid recreating on every render
+const LOG_TYPE_CONFIG: Record<string, { icon: typeof Activity; color: string }> = {
+  wave_created: { icon: Activity, color: 'text-amber-400' },
+  wave_completed: { icon: CheckCircle2, color: 'text-emerald-400' },
+  skill_learned: { icon: Star, color: 'text-orange-400' },
+  spec_created: { icon: ClipboardList, color: 'text-cyan-400' },
+  proposal_created: { icon: Target, color: 'text-purple-400' },
+  trust_change: { icon: Handshake, color: 'text-emerald-400' },
+  pipeline_started: { icon: Rocket, color: 'text-amber-400' },
+  pipeline_completed: { icon: Trophy, color: 'text-emerald-400' },
+}
+
+// Extract timeAgo as a utility to avoid IIFE per log entry per render
+function timeAgo(dateStr: string): string {
+  const now = Date.now()
+  const logTime = new Date(dateStr).getTime()
+  const diffMs = now - logTime
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return 'ahora mismo'
+  if (diffMin < 60) return `hace ${diffMin} min`
+  const diffH = Math.floor(diffMin / 60)
+  if (diffH < 24) return `hace ${diffH}h`
+  const diffD = Math.floor(diffH / 24)
+  return `hace ${diffD}d`
+}
+
 interface DashboardTabProps {
   project: Project
   dashboard: DashboardData | null
@@ -162,14 +188,12 @@ export function DashboardTab({
                     Object.entries(systemHealth.waveTypeDistribution)
                       .sort(([, a], [, b]) => b - a)
                       .map(([type, count]) => {
-                        const maxCount = Math.max(...Object.values(systemHealth.waveTypeDistribution))
-                        const pct = maxCount > 0 ? (count / maxCount) * 100 : 0
                         const wt = WAVE_TYPES.find((w) => w.value === type)
                         return (
                           <div key={type} className="flex items-center gap-2">
                             <span className="text-[10px] text-zinc-300 w-24 truncate">{wt?.label || type}</span>
                             <div className="flex-1 h-3 rounded bg-zinc-800 overflow-hidden">
-                              <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5 }} className={`h-full rounded ${WAVE_DOT_COLOR[type] || 'bg-zinc-500'}`} />
+                              <motion.div initial={{ width: 0 }} animate={{ width: `${(count / Math.max(...Object.values(systemHealth.waveTypeDistribution), 1)) * 100}%` }} transition={{ duration: 0.5 }} className={`h-full rounded ${WAVE_DOT_COLOR[type] || 'bg-zinc-500'}`} />
                             </div>
                             <span className="text-[10px] text-zinc-200 w-5 text-right">{count}</span>
                           </div>
@@ -227,36 +251,15 @@ export function DashboardTab({
             <ScrollArea className="max-h-64">
               <div className="space-y-1.5">
                 {activityLogs.map((log, idx) => {
-                  const LOG_TYPE_CONFIG: Record<string, { icon: typeof Activity; color: string }> = {
-                    wave_created: { icon: Activity, color: 'text-amber-400' },
-                    wave_completed: { icon: CheckCircle2, color: 'text-emerald-400' },
-                    skill_learned: { icon: Star, color: 'text-orange-400' },
-                    spec_created: { icon: ClipboardList, color: 'text-cyan-400' },
-                    proposal_created: { icon: Target, color: 'text-purple-400' },
-                    trust_change: { icon: Handshake, color: 'text-emerald-400' },
-                    pipeline_started: { icon: Rocket, color: 'text-amber-400' },
-                    pipeline_completed: { icon: Trophy, color: 'text-emerald-400' },
-                  }
                   const cfg = LOG_TYPE_CONFIG[log.type] || { icon: Activity, color: 'text-zinc-300' }
                   const Icon = cfg.icon
-                  const timeAgo = (() => {
-                    const now = Date.now()
-                    const logTime = new Date(log.createdAt).getTime()
-                    const diffMs = now - logTime
-                    const diffMin = Math.floor(diffMs / 60000)
-                    if (diffMin < 1) return 'ahora mismo'
-                    if (diffMin < 60) return `hace ${diffMin} min`
-                    const diffH = Math.floor(diffMin / 60)
-                    if (diffH < 24) return `hace ${diffH}h`
-                    const diffD = Math.floor(diffH / 24)
-                    return `hace ${diffD}d`
-                  })()
+                  const ago = timeAgo(log.createdAt)
                   return (
                     <motion.div key={log.id} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.02 }} className="flex items-start gap-2.5 p-2 rounded-lg bg-zinc-800/30 border border-zinc-800/50">
                       <Icon className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${cfg.color}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] text-zinc-200 leading-tight">{log.message}</p>
-                        <p className="text-[10px] text-zinc-400 mt-0.5">{timeAgo}</p>
+                        <p className="text-[10px] text-zinc-400 mt-0.5">{ago}</p>
                       </div>
                     </motion.div>
                   )

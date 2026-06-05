@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { toast } from 'sonner'
 import type {
   Project, Wave, LiveAgentState, BenchAgentMetric, BenchAggregates,
@@ -93,6 +93,16 @@ export function useNexusData() {
   const abortRef = useRef<AbortController | null>(null)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dashboardRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Cleanup pending search timeout on unmount to prevent state updates on dead components
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+        searchTimeoutRef.current = null
+      }
+    }
+  }, [])
 
   const fetchDashboard = useCallback(async (projId: string) => {
     try {
@@ -340,12 +350,12 @@ export function useNexusData() {
     return () => clearTimeout(timer)
   }, [project, dashboard, fetchSharedLearnings])
 
-  // Auto-refresh dashboard every 30 seconds when on dashboard tab
+  // Auto-refresh dashboard every 60 seconds when on dashboard tab (reduced from 30s)
   useEffect(() => {
     if (activeTab === 'dashboard' && project) {
       dashboardRefreshRef.current = setInterval(() => {
         fetchDashboard(project.id)
-      }, 30000)
+      }, 60000)
     }
     return () => {
       if (dashboardRefreshRef.current) {
@@ -812,50 +822,73 @@ export function useNexusData() {
     }
   }
 
-  // Derived data
-  const divisions = project ? [...new Set(project.agents.map((pa) => pa.agent.division))] : []
+  // Derived data — all memoized to prevent O(N×M) recomputation on every render
+  const divisions = useMemo(
+    () => project ? [...new Set(project.agents.map((pa) => pa.agent.division))] : [],
+    [project]
+  )
 
-  const filteredAgents = project
-    ? project.agents.filter((pa) => {
-        if (agentFilter !== 'all' && pa.agent.division !== agentFilter) return false
-        if (agentSearch && !pa.agent.name.toLowerCase().includes(agentSearch.toLowerCase()) && !pa.agent.division.toLowerCase().includes(agentSearch.toLowerCase())) return false
-        return true
-      })
-    : []
+  const filteredAgents = useMemo(() => {
+    if (!project) return []
+    return project.agents.filter((pa) => {
+      if (agentFilter !== 'all' && pa.agent.division !== agentFilter) return false
+      if (agentSearch && !pa.agent.name.toLowerCase().includes(agentSearch.toLowerCase()) && !pa.agent.division.toLowerCase().includes(agentSearch.toLowerCase())) return false
+      return true
+    })
+  }, [project, agentFilter, agentSearch])
 
-  const filteredMemories = project
-    ? project.memories.filter((m) => {
-        if (memoryAgentFilter === 'all') return true
-        const agent = project.agents.find((pa) => pa.agentId === m.agentId)
-        return agent?.agent.division === memoryAgentFilter
-      })
-    : []
+  // Pre-build agentId→division lookup to avoid O(N×M) in memory filter
+  const agentDivisionMap = useMemo(() => {
+    if (!project) return new Map<string, string>()
+    const map = new Map<string, string>()
+    for (const pa of project.agents) {
+      map.set(pa.agentId, pa.agent.division)
+    }
+    return map
+  }, [project])
+
+  const filteredMemories = useMemo(() => {
+    if (!project) return []
+    if (memoryAgentFilter === 'all') return project.memories
+    return project.memories.filter((m) => agentDivisionMap.get(m.agentId) === memoryAgentFilter)
+  }, [project, memoryAgentFilter, agentDivisionMap])
 
   // Dashboard stats
-  const avgConfidence = project && project.waves.length > 0
-    ? project.waves.reduce((sum, w) => {
-        const responses = w.responses || []
-        if (responses.length === 0) return sum
-        return sum + responses.reduce((s, r) => s + r.confidence, 0) / responses.length
-      }, 0) / project.waves.length
-    : 0
+  const avgConfidence = useMemo(() => {
+    if (!project || project.waves.length === 0) return 0
+    let total = 0
+    for (const w of project.waves) {
+      const responses = w.responses || []
+      if (responses.length === 0) continue
+      total += responses.reduce((s, r) => s + r.confidence, 0) / responses.length
+    }
+    return total / project.waves.length
+  }, [project])
 
-  const moodCounts = project ? project.waves.reduce((acc, w) => {
-    w.responses.forEach((r) => { acc[r.mood] = (acc[r.mood] || 0) + 1 })
+  const moodCounts = useMemo(() => {
+    if (!project) return {}
+    const acc: Record<string, number> = {}
+    for (const w of project.waves) {
+      for (const r of w.responses) {
+        acc[r.mood] = (acc[r.mood] || 0) + 1
+      }
+    }
     return acc
-  }, {} as Record<string, number>) : {}
+  }, [project])
 
   // Trust-ranked agents (top 10 by trust score)
-  const topTrustedAgents = project
-    ? [...project.agents]
-        .sort((a, b) => (b.trustScore ?? 0.5) - (a.trustScore ?? 0.5))
-        .slice(0, 10)
-    : []
+  const topTrustedAgents = useMemo(() => {
+    if (!project) return []
+    return [...project.agents]
+      .sort((a, b) => (b.trustScore ?? 0.5) - (a.trustScore ?? 0.5))
+      .slice(0, 10)
+  }, [project])
 
   // Average trust score
-  const avgTrust = project && project.agents.length > 0
-    ? project.agents.reduce((sum, pa) => sum + (pa.trustScore ?? 0.5), 0) / project.agents.length
-    : 0.5
+  const avgTrust = useMemo(() => {
+    if (!project || project.agents.length === 0) return 0.5
+    return project.agents.reduce((sum, pa) => sum + (pa.trustScore ?? 0.5), 0) / project.agents.length
+  }, [project])
 
   // Benchmarking helpers
   const toggleBenchSort = (field: keyof BenchAgentMetric) => {
