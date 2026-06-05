@@ -1253,6 +1253,36 @@ async function handleExportProject(request: NextRequest) {
   })
 }
 
+// ===== DELETE /api/nexus/project?id=xxx - Delete project =====
+async function handleDeleteProject(request: NextRequest) {
+  const projectId = request.nextUrl.searchParams.get('id')
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere ID de proyecto (query param ?id=)' }, { status: 400 })
+  }
+  // Delete project and all cascading data
+  await db.project.delete({ where: { id: projectId } })
+  return NextResponse.json({ success: true })
+}
+
+// ===== PUT /api/nexus/project?id=xxx - Update project (archive, rename) =====
+async function handleUpdateProject(request: NextRequest) {
+  const projectId = request.nextUrl.searchParams.get('id')
+  if (!projectId) {
+    return NextResponse.json({ error: 'Se requiere ID de proyecto' }, { status: 400 })
+  }
+  const body = await request.json()
+  const { name, description, status } = body
+  const updateData: Record<string, unknown> = {}
+  if (name !== undefined) updateData.name = name
+  if (description !== undefined) updateData.description = description
+  if (status !== undefined) updateData.status = status
+  if (Object.keys(updateData).length === 0) {
+    return NextResponse.json({ error: 'No se proporcionaron campos' }, { status: 400 })
+  }
+  const project = await db.project.update({ where: { id: projectId }, data: updateData })
+  return NextResponse.json({ project })
+}
+
 // ===== Route handlers =====
 export async function GET(request: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
   const { slug } = await params
@@ -1302,6 +1332,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
   const { slug } = await params
+  if (slug && slug[0] === 'project') {
+    return handleUpdateProject(request)
+  }
   if (slug && slug[0] === 'proposal') {
     return handleUpdateProposal(request)
   }
@@ -1313,6 +1346,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ slug?: string[] }> }) {
   const { slug } = await params
+  if (slug && slug[0] === 'project') {
+    return handleDeleteProject(request)
+  }
   if (slug && slug[0] === 'spec') {
     return handleDeleteSpec(request)
   }

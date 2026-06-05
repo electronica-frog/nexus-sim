@@ -32,6 +32,7 @@ const ProposalsTab = dynamic(() => import('@/components/nexus/proposals-tab').th
 const Mem0Tab = dynamic(() => import('@/components/nexus/mem0-tab').then(m => ({ default: m.Mem0Tab })), { loading: () => <div className="h-64 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const CrewAITab = dynamic(() => import('@/components/nexus/crew-ai-tab').then(m => ({ default: m.CrewAITab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const JudgesTab = dynamic(() => import('@/components/nexus/judges-tab').then(m => ({ default: m.JudgesTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
+const ProjectsTab = dynamic(() => import('@/components/nexus/projects-tab').then(m => ({ default: m.ProjectsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 
 // ===== Main Component =====
 export default function NexusContent() {
@@ -59,7 +60,7 @@ export default function NexusContent() {
     liveConnected, connectionCount,
     divisions, filteredAgents, filteredMemories,
     avgConfidence, moodCounts, topTrustedAgents, avgTrust,
-    handleSeed, toggleAgent, selectProject, createNewProject,
+    handleSeed, toggleAgent, selectProject, createNewProject, fetchProjects,
     runWaveStream, runPipelineStream,
     updateProposalStatus, createSpec, updateSpecPhase,
     updateSpecPriority, deleteSpec, createSpecFromWave,
@@ -284,6 +285,7 @@ export default function NexusContent() {
               setActiveTab(v)
             }}>
               <TabsList className="bg-zinc-900 border border-zinc-800 mb-6">
+                <TabsTrigger value="projects" className="data-[state=active]:bg-zinc-800"><FolderTree className="h-3.5 w-3.5 mr-1.5" />Proyectos</TabsTrigger>
                 <TabsTrigger value="roadmap" className="data-[state=active]:bg-zinc-800"><Map className="h-3.5 w-3.5 mr-1.5" />Roadmap</TabsTrigger>
                 <TabsTrigger value="dashboard" className="data-[state=active]:bg-zinc-800"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Dashboard</TabsTrigger>
                 <TabsTrigger value="agents" className="data-[state=active]:bg-zinc-800"><Users className="h-3.5 w-3.5 mr-1.5" />Agentes</TabsTrigger>
@@ -295,6 +297,18 @@ export default function NexusContent() {
                 <TabsTrigger value="crew" className="data-[state=active]:bg-zinc-800"><Users className="h-3.5 w-3.5 mr-1.5" />CrewAI</TabsTrigger>
                 <TabsTrigger value="judges" className="data-[state=active]:bg-zinc-800"><Gavel className="h-3.5 w-3.5 mr-1.5" />Judges</TabsTrigger>
               </TabsList>
+
+              {/* ===== PROJECTS TAB ===== */}
+              <TabsContent value="projects" className="space-y-6">
+                <ProjectsTab
+                  projects={projects}
+                  currentProjectId={project?.id}
+                  selectProject={selectProject}
+                  createNewProject={createNewProject}
+                  setActiveTab={setActiveTab}
+                  fetchProjects={fetchProjects}
+                />
+              </TabsContent>
 
               {/* ===== ROADMAP TAB ===== */}
               <TabsContent value="roadmap" className="space-y-6">

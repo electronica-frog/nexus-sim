@@ -210,6 +210,26 @@ const ROADMAP_PHASES: RoadmapPhase[] = [
       },
     ],
   },
+  {
+    id: 'phase-2',
+    title: 'Phase 2: Post-Roadmap',
+    subtitle: 'Mejoras de UX y funcionalidad avanzada',
+    color: 'text-rose-400',
+    borderColor: 'border-rose-500/30',
+    bgColor: 'bg-rose-500/5',
+    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    items: [
+      {
+        id: 'projects-tab',
+        title: 'Tab de Proyectos con Gestión Completa',
+        description: 'Tab dedicado para gestión de proyectos: crear, archivar, eliminar, comparar, y transferir conocimiento entre proyectos.',
+        status: 'done',
+        tech: 'ProjectsTab / Cross-Project Transfer UI / Archive/Delete',
+        icon: FolderTree,
+        details: 'Tab dedicado con project cards mostrando stats (agentes, oleadas, memorias, propuestas). Botones de archive/delete con confirmación. Panel de cross-project transfer visual con selección de items transferibles. Comparación side-by-side de proyectos.',
+      },
+    ],
+  },
 ]
 
 // ===== Completed Features (from worklog) =====
@@ -243,6 +263,7 @@ const COMPLETED_FEATURES = [
   { name: 'LLM Judges (5 dimensiones)', icon: Gavel },
   { name: 'Multi-Proyecto + Cross-Project Transfer', icon: FolderTree },
   { name: 'Botardo-OS Module Export', icon: Globe },
+  { name: 'Projects Tab (Gestión + Cross-Project)', icon: FolderTree },
 ]
 
 function getStatusConfig(status: RoadmapItem['status']) {
@@ -306,7 +327,7 @@ export function RoadmapTab() {
           <div>
             <h3 className="text-sm font-medium text-zinc-200 mb-3 flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              Ya Construido (27 fases completadas)
+              Ya Construido (28 fases completadas)
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {COMPLETED_FEATURES.map((feat, i) => {
