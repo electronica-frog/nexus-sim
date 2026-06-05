@@ -7,6 +7,7 @@ import { getAgentSkills, formatAgentSkills, markSkillsAsUsed, boostSkillQuality,
 import { addLog } from '@/lib/system-logs'
 import { computeTFIDFVector, vectorToJson } from '@/lib/vector-search'
 import { emitWaveStarted, emitWaveAgentResponding, emitWaveCompleted } from '@/lib/event-bus'
+import { getRelevantMemories, formatMemoryContext, touchMemories, extractAndStoreWaveMemories } from '@/lib/memory-store'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes for LLM calls
@@ -177,6 +178,17 @@ export async function POST(request: NextRequest) {
               await markSkillsAsUsed(skillIds).catch(() => {})
             }
 
+            // Fetch Mem0 long-term memories for this agent
+            let mem0Context = ''
+            try {
+              const relevantMemories = await getRelevantMemories(projectId, pa.agentId, 5)
+              if (relevantMemories.length > 0) {
+                mem0Context = formatMemoryContext(relevantMemories)
+                // Touch these memories to boost their relevance
+                await touchMemories(relevantMemories.map((m) => m.id)).catch(() => {})
+              }
+            } catch { /* non-blocking */ }
+
             // Emit broadcast event: agent responding
             emitWaveAgentResponding({ waveId: wave.id, agentName: pa.agent.name, agentEmoji: pa.agent.emoji, projectId })
 
@@ -197,6 +209,7 @@ export async function POST(request: NextRequest) {
                   previousResponses,
                   sharedLearnings: sharedLearningsStr,
                   agentSkills: agentSkillsStr,
+                  mem0Context,
                   agentEmoji: pa.agent.emoji,
                   agentVibe: pa.agent.vibe,
                 })
@@ -319,6 +332,24 @@ export async function POST(request: NextRequest) {
             })
             await addLog(projectId, 'proposal_created', `Propuesta creada desde oleada de crítica #${waveNumber}`, { proposalId: proposal.id, waveNumber, concernCount: concerns.length })
           }
+        }
+
+        // Extract Mem0 long-term memories from wave results (non-blocking)
+        try {
+          const agentIdMap: Record<string, string> = {}
+          for (const r of responses) {
+            if (r.projectAgent) agentIdMap[r.projectAgent.id] = r.projectAgent.agentId
+          }
+          const mem0Count = await extractAndStoreWaveMemories(
+            projectId, wave.id, waveNumber, type,
+            responses.map((r) => ({ agentId: r.projectAgent?.id || r.agentId, content: r.content, confidence: r.confidence, mood: r.mood })),
+            agentIdMap
+          )
+          if (mem0Count > 0) {
+            await addLog(projectId, 'mem0_stored', `${mem0Count} memorias de largo plazo almacenadas desde oleada #${waveNumber}`, { waveNumber, count: mem0Count })
+          }
+        } catch (mem0Err) {
+          console.error('Mem0 extraction error (non-blocking):', mem0Err)
         }
 
         // Extract skills from high-quality responses (Auto-Mejora)

@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator'
 import {
   Activity, Users, Waves, BarChart3, FileText, ClipboardList, Target,
   RefreshCw, Database, Loader2, BookOpen,
-  Map,
+  Map, Brain,
 } from 'lucide-react'
 
 // Extracted modules
@@ -29,6 +29,7 @@ const WavesTab = dynamic(() => import('@/components/nexus/waves-tab').then(m => 
 const MemoryTab = dynamic(() => import('@/components/nexus/memory-tab').then(m => ({ default: m.MemoryTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const SpecsTab = dynamic(() => import('@/components/nexus/specs-tab').then(m => ({ default: m.SpecsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const ProposalsTab = dynamic(() => import('@/components/nexus/proposals-tab').then(m => ({ default: m.ProposalsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
+const Mem0Tab = dynamic(() => import('@/components/nexus/mem0-tab').then(m => ({ default: m.Mem0Tab })), { loading: () => <div className="h-64 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 
 // ===== Main Component =====
 export default function NexusContent() {
@@ -138,6 +139,7 @@ export default function NexusContent() {
                 <TabsTrigger value="agents" className="data-[state=active]:bg-zinc-800"><Users className="h-3.5 w-3.5 mr-1.5" />Agentes</TabsTrigger>
                 <TabsTrigger value="waves" className="data-[state=active]:bg-zinc-800"><Waves className="h-3.5 w-3.5 mr-1.5" />Oleadas</TabsTrigger>
                 <TabsTrigger value="memory" className="data-[state=active]:bg-zinc-800"><FileText className="h-3.5 w-3.5 mr-1.5" />Memoria</TabsTrigger>
+                <TabsTrigger value="mem0" className="data-[state=active]:bg-zinc-800"><Brain className="h-3.5 w-3.5 mr-1.5" />Mem0</TabsTrigger>
                 <TabsTrigger value="specs" className="data-[state=active]:bg-zinc-800"><ClipboardList className="h-3.5 w-3.5 mr-1.5" />Specs</TabsTrigger>
                 <TabsTrigger value="proposals" className="data-[state=active]:bg-zinc-800"><Target className="h-3.5 w-3.5 mr-1.5" />Propuestas</TabsTrigger>
               </TabsList>
@@ -249,6 +251,11 @@ export default function NexusContent() {
                   chromaStatus={chromaStatus}
                   indexChroma={indexChroma}
                 />
+              </TabsContent>
+
+              {/* ===== MEM0 TAB ===== */}
+              <TabsContent value="mem0" className="space-y-4">
+                <Mem0Tab projectId={project.id} />
               </TabsContent>
 
               {/* ===== SPECS TAB ===== */}

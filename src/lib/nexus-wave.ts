@@ -32,10 +32,11 @@ export async function callLLM(data: {
   prompt: string; memories?: string[]; previousResponses?: string[];
   sharedLearnings?: string;
   agentSkills?: string;
+  mem0Context?: string;
   agentEmoji?: string; agentVibe?: string;
 }): Promise<{ content: string; confidence: number; mood: string }> {
   const zai = await ZAI.create()
-  const { agentName, agentPersonality, waveType, prompt, memories = [], previousResponses = [], sharedLearnings = '', agentSkills = '' } = data
+  const { agentName, agentPersonality, waveType, prompt, memories = [], previousResponses = [], sharedLearnings = '', agentSkills = '', mem0Context = '' } = data
   const agentEmoji = data.agentEmoji || '🤖'
   const agentVibe = data.agentVibe || ''
 
@@ -49,6 +50,7 @@ export async function callLLM(data: {
   if (previousResponses.length > 0) { parts.push('', '## Respuestas Previas de Otros Agentes', previousResponses.join('\n')) }
   if (sharedLearnings) { parts.push('', sharedLearnings) }
   if (agentSkills) { parts.push('', agentSkills) }
+  if (mem0Context) { parts.push('', mem0Context) }
   parts.push(
     '', '## Tu Tarea',
     `Responde con tu perspectiva como ${agentName}. Sé conciso pero sustancial (100-300 palabras).`,

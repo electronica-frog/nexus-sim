@@ -25,8 +25,9 @@ model Project {
   memories   AgentMemory[]
   proposals  Proposal[]
   specs      Spec[]
-  skills     AgentSkill[]
-  logs       SystemLog[]
+  skills       AgentSkill[]
+  memoryStore  MemoryStore[]
+  logs         SystemLog[]
 }
 
 // ===== AGENTS (from The Agency) =====
@@ -122,6 +123,47 @@ model AgentMemory {
   updatedAt   DateTime @updatedAt
 
   @@index([projectId, agentId])
+}
+
+// ===== MEM0 MEMORY STORE (Long-term memory with decay) =====
+// Inspired by Mem0: memories decay over time, consolidate, get relevance-scored.
+// Each memory has a "score" that decays exponentially and is boosted by reuse.
+
+model MemoryStore {
+  id          String   @id @default(cuid())
+  projectId   String
+  agentId     String  // FK to Agent.id
+
+  content     String  // Core memory content
+  category    String  @default("general") // general | fact | skill | preference | pattern | insight | relationship
+  tags        String  @default("") // comma-separated tags
+
+  // Mem0 scoring: base score + decay + boosts
+  baseScore   Float   @default(1.0)  // Initial importance (0-2)
+  accessCount Int    @default(0)    // Times this memory was retrieved/used
+  lastAccessedAt DateTime? // Last time it was used in context
+  decayRate   Float   @default(0.05) // Exponential decay rate (0=no decay, 0.1=fast)
+
+  // ChromaDB link for semantic search
+  chromaId    String? // ID in the nexus-memory-store ChromaDB collection
+
+  // Source tracking
+  sourceWaveId  String? // Which wave created this memory
+  sourceType    String  @default("wave") // wave | manual | consolidation | skill
+  mergedFromIds String? // JSON array of IDs that were merged into this
+
+  // Relevance (computed, not stored — but we cache it)
+  cachedRelevance Float?
+  relevanceUpdatedAt DateTime?
+
+  project     Project  @relation(fields: [projectId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId, agentId])
+  @@index([projectId, category])
+  @@index([agentId, sourceType])
 }
 
 // ===== AGENT SKILLS (Auto-Mejora / Self-Improvement) =====
