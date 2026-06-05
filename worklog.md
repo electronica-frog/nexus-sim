@@ -210,3 +210,23 @@ Stage Summary:
 - Nuevo feature: Quick Prompts grid en tab Oleadas con auto-set de wave type
 - Roadmap actualizado: 15/16 done + 1 in-progress + 1 pending en Phase 3
 - Server corriendo en puerto 3000, Caddy proxy en 81
+---
+Task ID: 2
+Agent: Main Agent  
+Task: Optimizar NEXUS + Ejecutar oleada de auto-mejora
+
+Work Log:
+- Aplicadas 5 optimizaciones anti-N+1 queries en [[...slug]]/route.ts:
+  1. handleGetSharedLearnings: 30 findUnique → 1 findMany batch
+  2. handleGetSkills: N findUnique → 1 findMany batch
+  3. handleCreateProject: 154 inserts → createMany
+  4. handleRunWave: batch status updates con Promise.all
+  5. handleRunWave: pre-fetch memorias por proyecto en vez de por agente
+- Ejecutada oleada de brainstorm via LLM directo con 3 agentes virtuales
+- Build exitoso post-optimizaciones
+
+Stage Summary:
+- Archivo optimizado: src/app/api/nexus/[[...slug]]/route.ts
+- Oleada ejecutada: "Cómo optimizar NEXUS para que no se tilde"
+- 3 agentes: ArchiteQ, PerfMax, DataBot con 9 recomendaciones
+- Recomendaciones clave: split API routes, caching, connection pooling, batch operations, streaming/Suspense

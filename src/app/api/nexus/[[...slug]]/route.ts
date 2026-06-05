@@ -184,26 +184,21 @@ async function handleCreateProject(request: NextRequest) {
   })
 
   const allAgents = await db.agent.findMany()
-  let count = 0
-  for (const agent of allAgents) {
-    await db.projectAgent.create({
-      data: {
-        projectId: project.id,
-        agentId: agent.id,
-        role: agent.agentId.includes('orchestrator')
-          ? 'orchestrator'
-          : agent.division === 'testing'
-            ? 'qa'
-            : agent.division === 'specialized'
-              ? 'specialist'
-              : 'team',
-        status: 'idle',
-      },
-    })
-    count++
-  }
+  const agentData = allAgents.map(agent => ({
+    projectId: project.id,
+    agentId: agent.id,
+    role: agent.agentId.includes('orchestrator')
+      ? 'orchestrator'
+      : agent.division === 'testing'
+        ? 'qa'
+        : agent.division === 'specialized'
+          ? 'specialist'
+          : 'team',
+    status: 'idle',
+  }))
+  await db.projectAgent.createMany({ data: agentData })
 
-  return NextResponse.json({ project, agentsAssigned: count })
+  return NextResponse.json({ project, agentsAssigned: agentData.length })
 }
 
 // ===== POST /api/nexus/spec - Create spec =====
@@ -361,12 +356,13 @@ async function handleRunWave(request: NextRequest) {
     data: { projectId, number: waveNumber, type, status: 'running', prompt, specId: specId || null },
   })
 
-  for (const pa of projectAgents) {
-    await db.projectAgent.update({
+  // Batch update agent statuses to 'thinking'
+  await Promise.all(
+    projectAgents.map(pa => db.projectAgent.update({
       where: { id: pa.id },
       data: { status: 'thinking', waveNumber },
-    })
-  }
+    }))
+  )
 
   const previousWaves = await db.wave.findMany({
     where: { projectId, id: { not: wave.id } },
@@ -387,13 +383,23 @@ async function handleRunWave(request: NextRequest) {
     orderBy: [{ quality: 'desc' }, { timesUsed: 'desc' }],
   })
 
+  // Pre-fetch ALL agent memories at once (avoid N+1 queries)
+  const allAgentIds = projectAgents.map(pa => pa.agentId)
+  const allMemories = await db.agentMemory.findMany({
+    where: { projectId, agentId: { in: allAgentIds } },
+    orderBy: { importance: 'desc' },
+  })
+  // Group memories by agentId
+  const memoriesByAgent = new Map<string, typeof allMemories>()
+  for (const mem of allMemories) {
+    const existing = memoriesByAgent.get(mem.agentId) || []
+    if (existing.length < 5) existing.push(mem)
+    memoriesByAgent.set(mem.agentId, existing)
+  }
+
   for (const pa of projectAgents) {
     try {
-      const memories = await db.agentMemory.findMany({
-        where: { projectId, agentId: pa.agentId },
-        orderBy: { importance: 'desc' },
-        take: 5,
-      })
+      const memories = memoriesByAgent.get(pa.agentId) || []
 
       const memoryStrings = memories.map((m) => `[${m.type}]: ${m.content}`)
 
@@ -721,29 +727,35 @@ async function handleGetSharedLearnings(request: NextRequest) {
     take: 30,
   })
 
-  // Enrich with agent info
-  const enriched = await Promise.all(
-    memories.map(async (m) => {
-      const agent = await db.agent.findUnique({ where: { id: m.agentId } })
-      const tagsArr = m.tags.split(',').map((t) => t.trim())
-      const waveType = tagsArr.find((t) =>
-        ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate'].includes(t),
-      ) || 'unknown'
-      return {
-        id: m.id,
-        agentId: m.agentId,
-        agentName: agent?.name || 'Desconocido',
-        agentEmoji: agent?.emoji || '🤖',
-        agentDivision: agent?.division || 'unknown',
-        waveType,
-        content: m.content,
-        tags: tagsArr,
-        importance: m.importance,
-        type: m.type,
-        createdAt: m.createdAt,
-      }
-    }),
-  )
+  // Batch-fetch all agent info (avoid N+1)
+  const agentIds = [...new Set(memories.map(m => m.agentId))]
+  const agentsMap = new Map<string, { name: string; emoji: string; division: string }>()
+  if (agentIds.length > 0) {
+    const agents = await db.agent.findMany({ where: { id: { in: agentIds } }, select: { id: true, name: true, emoji: true, division: true } })
+    for (const a of agents) agentsMap.set(a.id, { name: a.name, emoji: a.emoji, division: a.division })
+  }
+
+  // Enrich with agent info (no DB queries)
+  const enriched = memories.map((m) => {
+    const agent = agentsMap.get(m.agentId)
+    const tagsArr = m.tags.split(',').map((t) => t.trim())
+    const waveType = tagsArr.find((t) =>
+      ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate'].includes(t),
+    ) || 'unknown'
+    return {
+      id: m.id,
+      agentId: m.agentId,
+      agentName: agent?.name || 'Desconocido',
+      agentEmoji: agent?.emoji || '🤖',
+      agentDivision: agent?.division || 'unknown',
+      waveType,
+      content: m.content,
+      tags: tagsArr,
+      importance: m.importance,
+      type: m.type,
+      createdAt: m.createdAt,
+    }
+  })
 
   // Group by wave type
   const grouped: Record<string, typeof enriched> = {}
@@ -947,10 +959,16 @@ async function handleGetSkills(request: NextRequest) {
     orderBy: [{ quality: 'desc' }, { timesUsed: 'desc' }],
   })
 
-  // Enrich with agent info
-  const enriched = await Promise.all(
-    skills.map(async (s) => {
-      const agent = await db.agent.findUnique({ where: { id: s.agentId } })
+  // Batch-fetch agent info (avoid N+1 queries)
+  const skillAgentIds = [...new Set(skills.map(s => s.agentId))]
+  const skillsAgentsMap = new Map<string, { name: string; emoji: string; division: string }>()
+  if (skillAgentIds.length > 0) {
+    const skillsAgents = await db.agent.findMany({ where: { id: { in: skillAgentIds } }, select: { id: true, name: true, emoji: true, division: true } })
+    for (const a of skillsAgents) skillsAgentsMap.set(a.id, { name: a.name, emoji: a.emoji, division: a.division })
+  }
+
+  const enriched = skills.map((s) => {
+    const agent = skillsAgentsMap.get(s.agentId)
       return {
         id: s.id,
         projectId: s.projectId,
@@ -966,8 +984,7 @@ async function handleGetSkills(request: NextRequest) {
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
       }
-    }),
-  )
+  })
 
   return NextResponse.json({ skills: enriched, total: enriched.length })
 }
