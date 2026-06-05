@@ -1,0 +1,54 @@
+# NEXUS Sim v2 — Docker Compose
+# Complete multi-agent simulation system
+
+services:
+  nexus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nexus-sim
+    ports:
+      - "3000:3000"
+    volumes:
+      - nexus-data:/app/db        # SQLite database persistence
+      - nexus-chroma:/app/.chroma-data  # ChromaDB vector store
+      - nexus-logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/db/custom.db
+      - CHROMA_DATA_DIR=/app/.chroma-data
+      - PYTHON_PATH=/usr/local/bin/python3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/socket"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Optional: Caddy reverse proxy for HTTPS
+  caddy:
+    image: caddy:2-alpine
+    container_name: nexus-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+    depends_on:
+      nexus:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  nexus-data:
+  nexus-chroma:
+  nexus-logs:
+  caddy-data:

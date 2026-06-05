@@ -1,0 +1,24 @@
+# Docker ignore
+# Exclude unnecessary files from Docker build context
+
+.git
+.github
+.vscode
+.idea
+.venv
+.chroma-data
+.next
+node_modules
+download
+agent-ctx
+*.log
+*.db
+*.db-wal
+*.db-shm
+.env
+.env*.local
+test/
+prompt/
+skills/
+worklog.md
+tmp/
