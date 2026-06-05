@@ -194,19 +194,19 @@ const ROADMAP_PHASES: RoadmapPhase[] = [
         id: 'multi-proyecto',
         title: 'Multi-Proyecto con Agent Pool Compartido',
         description: 'Soportar multiples proyectos simultaneos con un pool de agentes compartido y aprendizaje cruzado entre proyectos (cross-project knowledge transfer).',
-        status: 'future',
-        tech: 'Prisma multi-tenant / Schema per project',
+        status: 'done',
+        tech: 'Project Selector / localStorage persistence / Cross-Project API / State Reset',
         icon: FolderTree,
-        details: 'Actualmente un solo proyecto. Multi-proyecto permite comparar estrategias, reusar agentes, y transferir aprendizajes entre proyectos distintos.',
+        details: 'Project selector dropdown en header. SelectProject() con state reset completo. localStorage persiste ultimo proyecto seleccionado. POST /api/nexus/project crea proyectos con todos los agentes. Cross-project knowledge transfer: skills, memories y Mem0 transferibles entre proyectos. Agents globales con ProjectAgent junction table.',
       },
       {
         id: 'botardo-export',
         title: 'Export a Botardo-OS — Modulo NEXUS',
         description: 'Integracion completa con el ecosistema botardo-os como modulo de simulacion multi-agente: API publica, webhooks, shared infrastructure, marketplace de agentes.',
-        status: 'future',
-        tech: 'botardo-os ecosystem',
+        status: 'done',
+        tech: 'Module Manifest / 12 Capabilities / Webhooks / MCP Integration / API Export',
         icon: Globe,
-        details: 'NEXUS Sim se convierte en un modulo mas del ecosistema botardo-os. Otros proyectos pueden consumir la API de simulacion, crear agentes custom, y contribuir al marketplace.',
+        details: 'GET /api/nexus/botardo-os genera manifest completo con: module metadata, agent definitions portables, API endpoints docs, MCP config, webhooks (11 event types), 12 capabilities documentadas, integration quick-start guide. POST /api/nexus/botardo-os registra instancia en hub externo. NEXUS listo como modulo importable del ecosistema.',
       },
     ],
   },
@@ -241,6 +241,8 @@ const COMPLETED_FEATURES = [
   { name: 'MCP Full Server (16 tools)', icon: Plug },
   { name: 'CrewAI Orquestación', icon: Users },
   { name: 'LLM Judges (5 dimensiones)', icon: Gavel },
+  { name: 'Multi-Proyecto + Cross-Project Transfer', icon: FolderTree },
+  { name: 'Botardo-OS Module Export', icon: Globe },
 ]
 
 function getStatusConfig(status: RoadmapItem['status']) {
@@ -304,7 +306,7 @@ export function RoadmapTab() {
           <div>
             <h3 className="text-sm font-medium text-zinc-200 mb-3 flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              Ya Construido (25 fases completadas)
+              Ya Construido (27 fases completadas)
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {COMPLETED_FEATURES.map((feat, i) => {

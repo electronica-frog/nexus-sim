@@ -10,10 +10,12 @@ import { SPEC_PHASE_CONFIG, SPEC_PRIORITY_CONFIG } from './constants'
 import { useNexusLive } from '@/hooks/use-nexus-live'
 
 export function useNexusData() {
+  const [projects, setProjects] = useState<Project[]>([])
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
   const [activeTab, setActiveTab] = useState('roadmap')
+  const [creatingProject, setCreatingProject] = useState(false)
 
   // Wave simulation state
   const [wavePrompt, setWavePrompt] = useState('')
@@ -104,19 +106,34 @@ export function useNexusData() {
     }
   }, [])
 
-  const fetchProject = useCallback(async () => {
+  const fetchProjects = useCallback(async () => {
     try {
-      setLoading(true)
       const res = await fetch('/api/nexus')
       const data = await res.json()
-      if (data.projects && data.projects.length > 0) {
-        const projectId = data.projects[0].id
-        const projRes = await fetch(`/api/nexus?projectId=${projectId}`)
-        const projData = await projRes.json()
-        if (projData.project) {
-          setProject(projData.project)
-          return projData.project
-        }
+      if (data.projects) {
+        setProjects(data.projects)
+        return data.projects
+      }
+    } catch (err) {
+      console.error('Error fetching projects:', err)
+    }
+    return []
+  }, [])
+
+  const fetchProject = useCallback(async (projectId?: string) => {
+    try {
+      setLoading(true)
+      const list = await fetchProjects()
+      const targetId = projectId || (list.length > 0 ? list[0].id : null)
+      if (!targetId) {
+        setLoading(false)
+        return null
+      }
+      const projRes = await fetch(`/api/nexus?projectId=${targetId}`)
+      const projData = await projRes.json()
+      if (projData.project) {
+        setProject(projData.project)
+        return projData.project
       }
     } catch (err) {
       console.error('Error fetching project:', err)
@@ -124,7 +141,60 @@ export function useNexusData() {
       setLoading(false)
     }
     return null
+  }, [fetchProjects])
+
+  const selectProject = useCallback(async (projectId: string) => {
+    // Reset all dependent state
+    setDashboard(null)
+    setBenchMetrics(null)
+    setBenchAggregates(null)
+    setAgentSkills([])
+    setSharedLearnings([])
+    setSelectedWave(null)
+    setSelectedSpec(null)
+    setSelectedAgent(null)
+    setLiveAgents([])
+    setLiveComplete(false)
+    setLiveSynthesis(null)
+    setSelectedAgentIds([])
+    setMemorySearchResults([])
+    // Fetch the selected project
+    try {
+      setLoading(true)
+      const projRes = await fetch(`/api/nexus?projectId=${projectId}`)
+      const projData = await projRes.json()
+      if (projData.project) {
+        setProject(projData.project)
+      }
+    } catch (err) {
+      console.error('Error switching project:', err)
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  const createNewProject = useCallback(async (name: string, description?: string) => {
+    setCreatingProject(true)
+    try {
+      const res = await fetch('/api/nexus/project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description: description || `Proyecto ${name}` }),
+      })
+      const data = await res.json()
+      if (data.project) {
+        toast.success(`Proyecto "${name}" creado con ${data.agentCount || 0} agentes`)
+        await fetchProjects()
+        await selectProject(data.project.id)
+        return data.project
+      }
+    } catch {
+      toast.error('Error al crear proyecto')
+    } finally {
+      setCreatingProject(false)
+    }
+    return null
+  }, [fetchProjects, selectProject])
 
   // Separate: fetch dashboard AFTER project is loaded (sequential)
   useEffect(() => {
@@ -321,8 +391,24 @@ export function useNexusData() {
   }
 
   useEffect(() => {
-    fetchProject()
-  }, [fetchProject])
+    fetchProjects().then(async (list) => {
+      if (list.length > 0) {
+        // Try localStorage for last selected project
+        const savedId = typeof window !== 'undefined' ? localStorage.getItem('nexus-selected-project') : null
+        const targetId = savedId && list.some(p => p.id === savedId) ? savedId : list[0].id
+        await fetchProject(targetId)
+      } else {
+        setLoading(false)
+      }
+    })
+  }, [fetchProjects, fetchProject])
+
+  // Save selected project to localStorage
+  useEffect(() => {
+    if (project && typeof window !== 'undefined') {
+      localStorage.setItem('nexus-selected-project', project.id)
+    }
+  }, [project?.id])
 
   // Lazy-load shared learnings + ChromaDB status when Memory tab is selected
   useEffect(() => {
@@ -802,7 +888,7 @@ export function useNexusData() {
 
   return {
     // State
-    project, loading, seeding, activeTab, setActiveTab,
+    projects, project, loading, seeding, creatingProject, activeTab, setActiveTab,
     wavePrompt, setWavePrompt, waveType, setWaveType,
     selectedAgentIds, runningWave, agentFilter, setAgentFilter,
     agentSearch, setAgentSearch, selectedAgent, setSelectedAgent,
@@ -834,7 +920,7 @@ export function useNexusData() {
     avgConfidence, moodCounts, topTrustedAgents, avgTrust,
 
     // Actions
-    handleSeed, fetchProjectWithRefresh, toggleAgent,
+    handleSeed, fetchProjectWithRefresh, selectProject, createNewProject, fetchProjects, toggleAgent,
     runWaveStream, runPipelineStream,
     updateProposalStatus, createSpec, updateSpecPhase,
     updateSpecPriority, deleteSpec, createSpecFromWave,

@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator'
 import {
   Activity, Users, Waves, BarChart3, FileText, ClipboardList, Target,
   RefreshCw, Database, Loader2, BookOpen,
-  Map, Brain, Gavel,
+  Map, Brain, Gavel, FolderTree, Plus, ChevronDown,
 } from 'lucide-react'
 
 // Extracted modules
@@ -36,7 +36,7 @@ const JudgesTab = dynamic(() => import('@/components/nexus/judges-tab').then(m =
 // ===== Main Component =====
 export default function NexusContent() {
   const {
-    project, loading, seeding, activeTab, setActiveTab,
+    projects, project, loading, seeding, creatingProject, activeTab, setActiveTab,
     wavePrompt, setWavePrompt, waveType, setWaveType,
     selectedAgentIds, runningWave, agentFilter, setAgentFilter,
     agentSearch, setAgentSearch, selectedAgent, setSelectedAgent,
@@ -59,7 +59,7 @@ export default function NexusContent() {
     liveConnected, connectionCount,
     divisions, filteredAgents, filteredMemories,
     avgConfidence, moodCounts, topTrustedAgents, avgTrust,
-    handleSeed, toggleAgent,
+    handleSeed, toggleAgent, selectProject, createNewProject,
     runWaveStream, runPipelineStream,
     updateProposalStatus, createSpec, updateSpecPhase,
     updateSpecPriority, deleteSpec, createSpecFromWave,
@@ -69,6 +69,8 @@ export default function NexusContent() {
 
   // ===== How It Works Banner =====
   const [showBanner, setShowBanner] = useState(false)
+  const [showProjectMenu, setShowProjectMenu] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
   useEffect(() => {
     const dismissed = localStorage.getItem('nexus-how-banner-dismissed')
     if (!dismissed) setShowBanner(true)
@@ -127,9 +129,82 @@ export default function NexusContent() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-zinc-700 text-zinc-300 text-xs">{project.agents.length} agentes</Badge>
+            {/* Project Selector */}
+            {projects.length > 1 && (
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowProjectMenu(!showProjectMenu)}
+                  className="text-zinc-200 hover:text-zinc-100 gap-1.5 border border-zinc-700/50"
+                >
+                  <FolderTree className="h-3.5 w-3.5 text-emerald-400" />
+                  <span className="hidden sm:inline max-w-[120px] truncate">{project?.name || 'Proyecto'}</span>
+                  <ChevronDown className="h-3 w-3 text-zinc-400" />
+                </Button>
+                {showProjectMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowProjectMenu(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-50 w-64 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden">
+                      <div className="p-2 space-y-1 max-h-60 overflow-y-auto">
+                        <p className="text-[10px] text-zinc-500 font-medium px-2 py-1">PROYECTOS ({projects.length})</p>
+                        {projects.map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => { selectProject(p.id); setShowProjectMenu(false) }}
+                            className={`w-full text-left px-3 py-2 rounded-md text-xs transition-colors flex items-center justify-between ${
+                              p.id === project?.id
+                                ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
+                                : 'text-zinc-300 hover:bg-zinc-800 border border-transparent'
+                            }`}
+                          >
+                            <span className="truncate">{p.name}</span>
+                            {p.id === project?.id && <span className="text-emerald-400 text-[9px]">●</span>}
+                          </button>
+                        ))}
+                      </div>
+                      <Separator className="bg-zinc-800" />
+                      <div className="p-2">
+                        <div className="flex gap-1.5">
+                          <input
+                            type="text"
+                            placeholder="Nombre del proyecto..."
+                            value={newProjectName}
+                            onChange={(e) => setNewProjectName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && newProjectName.trim()) {
+                                createNewProject(newProjectName.trim())
+                                setNewProjectName('')
+                                setShowProjectMenu(false)
+                              }
+                            }}
+                            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                          />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (newProjectName.trim()) {
+                                createNewProject(newProjectName.trim())
+                                setNewProjectName('')
+                                setShowProjectMenu(false)
+                              }
+                            }}
+                            disabled={!newProjectName.trim() || creatingProject}
+                            className="h-7 w-7 p-0 text-emerald-400 hover:text-emerald-300"
+                          >
+                            {creatingProject ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            <Badge variant="outline" className="border-zinc-700 text-zinc-300 text-xs">{project?.agents.length || 0} agentes</Badge>
             <Badge variant="outline" className="border-emerald-700 text-emerald-300 text-xs">
-              <Activity className="h-3 w-3 mr-1" />{project.status}
+              <Activity className="h-3 w-3 mr-1" />{project?.status || 'active'}
             </Badge>
             <Button variant="ghost" size="sm" onClick={handleSeed} disabled={seeding} className="text-zinc-200 hover:text-zinc-100">
               <RefreshCw className={`h-3.5 w-3.5 mr-1 ${seeding ? 'animate-spin' : ''}`} />
@@ -389,7 +464,7 @@ export default function NexusContent() {
             <a href="/docs" className="hover:text-emerald-400 transition-colors flex items-center gap-1">
               <BookOpen className="h-3 w-3" />API Docs
             </a>
-            <span>{project.agents.length} agentes · {project.waves.length} oleadas</span>
+            <span>{project?.agents.length || 0} agentes · {project?.waves.length || 0} oleadas</span>
           </div>
         </div>
       </footer>
