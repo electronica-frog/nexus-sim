@@ -1,54 +1,85 @@
-# NEXUS Sim v2 — Docker Compose
-# Complete multi-agent simulation system
+# ===== NEXUS Sim v2 — Docker Compose =====
+# One-command deployment: docker compose up -d
+#
+# Services:
+#   - nexus:      Next.js app (port 3000 internal)
+#   - caddy:      Reverse proxy + auto-HTTPS (port 80/443 external)
+#   - chroma:     Optional ChromaDB vector search (Python sidecar)
+#
+# Usage:
+#   docker compose up -d                # Start all services
+#   docker compose up -d nexus caddy    # Without ChromaDB sidecar
+#   docker compose logs -f nexus        # View app logs
+#   docker compose down                 # Stop everything (data persists in volumes)
 
 services:
+  # ---- NEXUS App ----
   nexus:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: nexus-sim
-    ports:
-      - "3000:3000"
-    volumes:
-      - nexus-data:/app/db        # SQLite database persistence
-      - nexus-chroma:/app/.chroma-data  # ChromaDB vector store
-      - nexus-logs:/app/logs
+    restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:/app/db/custom.db
-      - CHROMA_DATA_DIR=/app/.chroma-data
-      - PYTHON_PATH=/usr/local/bin/python3
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+      - DATABASE_URL=file:/app/data/nexus.db
+      - PYTHON_PATH=/usr/bin/python3
+      - CHROMA_PATH=/app/.chroma-data
+    volumes:
+      - nexus-data:/app/data
+      - chroma-data:/app/.chroma-data
+    expose:
+      - "3000"
+    mem_limit: 512m
+    cpus: 1.0
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/socket"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
-      start_period: 20s
+      start_period: 15s
 
-  # Optional: Caddy reverse proxy for HTTPS
+  # ---- Caddy Reverse Proxy ----
   caddy:
     image: caddy:2-alpine
     container_name: nexus-caddy
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
+      - caddy-config:/config
     depends_on:
       nexus:
         condition: service_healthy
-    restart: unless-stopped
+    mem_limit: 64m
+
+  # ---- ChromaDB Sidecar (optional) ----
+  # Provides persistent vector search via Python.
+  # Only needed if the built-in ONNX embeddings aren't sufficient.
+  # Uncomment to enable:
+  #
+  # chroma:
+  #   image: chromadb/chroma:latest
+  #   container_name: nexus-chroma
+  #   restart: unless-stopped
+  #   volumes:
+  #     - chroma-data:/chroma/chroma
+  #   expose:
+  #     - "8000"
+  #   environment:
+  #     - IS_PERSISTENT=TRUE
+  #     - ANONYMIZED_TELEMETRY=FALSE
+  #   mem_limit: 256m
 
 volumes:
   nexus-data:
-  nexus-chroma:
-  nexus-logs:
+    driver: local
+  chroma-data:
+    driver: local
   caddy-data:
+    driver: local
+  caddy-config:
+    driver: local

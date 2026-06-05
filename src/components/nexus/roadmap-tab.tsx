@@ -136,10 +136,10 @@ const ROADMAP_PHASES: RoadmapPhase[] = [
         id: 'docker',
         title: 'Docker — Containerizacion Portable',
         description: 'Containerizar la app completa (Next.js + SQLite + Caddy) en un Docker Compose para deployment consistente en cualquier servidor.',
-        status: 'pending',
-        tech: 'Docker / Docker Compose',
+        status: 'done',
+        tech: 'Docker / Docker Compose / Multi-stage Dockerfile / Caddy',
         icon: Container,
-        details: 'Permite levantar NEXUS Sim en cualquier lado con un solo `docker compose up`. Base para botardo-os deployment.',
+        details: 'Dockerfile multi-stage (deps → builder → runner). docker-compose.yml con 3 servicios: nexus (512MB), caddy (64MB), chroma (opcional). Caddyfile con SSE support. .dockerignore completo. `docker compose up -d` levanta todo.',
       },
     ],
   },
@@ -236,6 +236,8 @@ const COMPLETED_FEATURES = [
   { name: 'Agent Graphs / State Machines', icon: Workflow },
   { name: 'ChromaDB Vector Search (384-dim)', icon: Database },
   { name: 'Socket.io code (server + client)', icon: Radio },
+  { name: 'Docker Containerization', icon: Container },
+  { name: 'Banner "Cómo Funciona Esto"', icon: CheckCircle2 },
 ]
 
 function getStatusConfig(status: RoadmapItem['status']) {

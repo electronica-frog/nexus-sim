@@ -1,24 +1,56 @@
-# Docker ignore
-# Exclude unnecessary files from Docker build context
+# Dependencies
+node_modules
+.pnp
+.pnp.js
 
-.git
-.github
+# Build
+.next
+out
+dist
+
+# IDE
 .vscode
 .idea
-.venv
-.chroma-data
-.next
-node_modules
-download
-agent-ctx
-*.log
-*.db
-*.db-wal
-*.db-shm
+.cursor
+*.swp
+*.swo
+
+# Environment
 .env
-.env*.local
-test/
-prompt/
-skills/
-worklog.md
+.env.local
+.env.production.local
+.env.test.local
+
+# Data (runtime, not build)
+*.db
+*.db-journal
+*.db-wal
+.chroma-data/
+data/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Git
+.git
+.gitignore
+
+# Misc
+*.md
+*.log
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+.editorconfig
+.eslintrc*
+.prettierrc*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
 tmp/
+tmp_*/

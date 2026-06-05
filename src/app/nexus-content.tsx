@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Suspense } from 'react'
+import React, { Suspense, useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -65,6 +65,17 @@ export default function NexusContent() {
     toggleBenchSort, getFilteredSortedMetrics,
   } = useNexusData()
 
+  // ===== How It Works Banner =====
+  const [showBanner, setShowBanner] = useState(false)
+  useEffect(() => {
+    const dismissed = localStorage.getItem('nexus-how-banner-dismissed')
+    if (!dismissed) setShowBanner(true)
+  }, [])
+  const dismissBanner = () => {
+    setShowBanner(false)
+    localStorage.setItem('nexus-how-banner-dismissed', '1')
+  }
+
   // ===== Loading State =====
   if (loading) {
     return (
@@ -125,6 +136,68 @@ export default function NexusContent() {
           </div>
         </div>
       </header>
+
+      {/* CÓMO FUNCIONA ESTO Banner */}
+      {showBanner && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="max-w-7xl mx-auto px-4 md:px-6 pt-4">
+            <Card className="bg-gradient-to-r from-violet-950/80 via-zinc-900 to-emerald-950/60 border border-zinc-700/60 overflow-hidden">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">💡</span>
+                      <h2 className="text-lg font-bold text-zinc-50">CÓMO FUNCIONA ESTO</h2>
+                      <Badge className="bg-amber-600/90 text-amber-50 text-[10px] px-1.5 py-0">IMPORTANTE</Badge>
+                    </div>
+                    <div className="space-y-2 text-sm text-zinc-200 leading-relaxed">
+                      <p>
+                        <span className="font-semibold text-emerald-400">Esta app es un panel de visualización (frontend).</span> No podés iniciar simulaciones, crear oleadas ni ejecutar comandos desde acá. Todo el control de la simulación ocurre <span className="font-semibold text-violet-400">directamente en el chat de Discord</span> donde está conectado NEXUS.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
+                        <div className="bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/50">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-sm">💬</span>
+                            <span className="font-medium text-zinc-100 text-xs">EN EL CHAT</span>
+                          </div>
+                          <p className="text-xs text-zinc-300">Envía comandos, pedí oleadas, activá agentes — todo pasa por Discord.</p>
+                        </div>
+                        <div className="bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/50">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-sm">📊</span>
+                            <span className="font-medium text-zinc-100 text-xs">EN ESTA APP</span>
+                          </div>
+                          <p className="text-xs text-zinc-300">Mirá el dashboard, revisá memorias, explorá agentes y resultados en tiempo real.</p>
+                        </div>
+                        <div className="bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/50">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-sm">🔄</span>
+                            <span className="font-medium text-zinc-100 text-xs">SINCRONIZADO</span>
+                          </div>
+                          <p className="text-xs text-zinc-300">La app se actualiza sola. Los datos de la simulación aparecen acá automáticamente.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={dismissBanner}
+                    className="text-zinc-400 hover:text-zinc-100 shrink-0 mt-1"
+                  >
+                    ✕ Cerrar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-6 py-4 md:py-6">

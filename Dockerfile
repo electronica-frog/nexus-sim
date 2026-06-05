@@ -1,72 +1,67 @@
-# NEXUS Sim v2 — Dockerfile
-# Multi-stage build for minimal image size
-# Includes: Next.js app + Python ChromaDB + ONNX models
+# ===== NEXUS Sim v2 — Multi-stage Dockerfile =====
+# Optimized for minimal image size with Bun runtime
 
-# ===== Stage 1: Dependencies =====
-FROM node:20-slim AS deps
-
+# ---- Stage 1: Dependencies ----
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY package.json package-lock.json* bun.lock* ./
-RUN npm ci --omit=dev && npm cache clean --force
+COPY package.json bun.lockb* package-lock.json* yarn.lock* ./
+RUN \
+  if [ -f bun.lockb ]; then bun install --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
+  else npm install; \
+  fi
 
-# ===== Stage 2: Python + ChromaDB =====
-FROM python:3.12-slim AS python-deps
-
-RUN pip install --no-cache-dir chromadb==1.5.9
-
-# Pre-download ONNX model (all-MiniLM-L6-v2)
-RUN python -c "import chromadb; c=chromadb.PersistentClient('/tmp/.chroma-preload'); c.get_or_create_collection('preload', metadata={'hnsw:space':'cosine'})" && \
-    cp -r /root/.cache/chroma /opt/chroma-cache || true
-
-# ===== Stage 3: Build =====
-FROM node:20-slim AS builder
-
+# ---- Stage 2: Build ----
+FROM node:20-alpine AS builder
 WORKDIR /app
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build Next.js with standalone output
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+RUN npx next build
 
-RUN npx prisma generate
-RUN npm run build
+# Copy standalone output + static assets + public
+RUN cp -r .next/static .next/standalone/.next/ && \
+    cp -r public .next/standalone/
 
-# ===== Stage 4: Production =====
-FROM node:20-slim
-
+# ---- Stage 3: Production ----
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install runtime dependencies only
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/embed.py ./embed.py
-COPY --from=builder /app/server.mjs ./server.mjs
-COPY --from=builder /app/watchdog.sh ./watchdog.sh
-COPY --from=builder /app/db ./db
-
-# Python + ChromaDB
-COPY --from=python-deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=python-deps /usr/local/bin/python3* /usr/local/bin/
-COPY --from=python-deps /opt/chroma-cache /opt/chroma-cache
-
-# Pre-create chroma data directory
-RUN mkdir -p /app/.chroma-data && chmod 777 /app/.chroma-data
-
-# Environment
 ENV NODE_ENV=production
-ENV DATABASE_URL=file:/app/db/custom.db
-ENV CHROMA_DATA_DIR=/app/.chroma-data
-ENV PYTHON_PATH=/usr/local/bin/python3
-ENV PORT=3000
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=256"
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nexus
+
+# Copy built app
+COPY --from=builder --chown=nexus:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nexus:nodejs /app/.next/standalone/.next ./.next
+COPY --from=builder --chown=nexus:nodejs /app/prisma ./prisma
+
+# Create data directories
+RUN mkdir -p /app/data /app/.chroma-data && \
+    chown nexus:nodejs /app/data /app/.chroma-data
+
+USER nexus
 
 EXPOSE 3000
 
-# Start with watchdog for process persistence
-RUN chmod +x /app/watchdog.sh
-CMD ["bash", "/app/watchdog.sh"]
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+CMD ["node", "server.js"]

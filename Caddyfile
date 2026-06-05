@@ -1,23 +1,26 @@
-:81 {
-	@transform_port_query {
-		query XTransformPort=*
-	}
+# ===== NEXUS Sim — Caddyfile (Docker Compose) =====
+# This Caddyfile is used by the caddy service in docker-compose.yml.
+# In Docker, Caddy communicates with the nexus service by container name.
 
-	handle @transform_port_query {
-		reverse_proxy localhost:{query.XTransformPort} {
-			header_up Host {host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-			header_up X-Real-IP {remote_host}
-		}
-	}
+:80 {
+	# Reverse proxy to NEXUS Next.js app
+	reverse_proxy nexus:3000 {
+		header_up Host {host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Real-IP {remote_host}
 
-	handle {
-		reverse_proxy localhost:3000 {
-			header_up Host {host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-			header_up X-Real-IP {remote_host}
-		}
+		# SSE support: long-lived connections for real-time updates
+		flush_interval -1
 	}
 }
+
+# Uncomment and set your domain for automatic HTTPS:
+# nexus.tudominio.com {
+# 	reverse_proxy nexus:3000 {
+# 		header_up Host {host}
+# 		header_up X-Forwarded-For {remote_host}
+# 		header_up X-Forwarded-Proto {scheme}
+# 		flush_interval -1
+# 	}
+# }
