@@ -235,29 +235,29 @@ export default function NexusContent() {
                     </div>
                     <div className="space-y-2 text-sm text-zinc-200 leading-relaxed">
                       <p>
-                        <span className="font-semibold text-emerald-400">Esta app es un panel de visualización (frontend).</span> No podés iniciar simulaciones, crear oleadas ni ejecutar comandos desde acá. Todo el control de la simulación ocurre <span className="font-semibold text-violet-400">directamente en el chat de Discord</span> donde está conectado NEXUS.
+                        <span className="font-semibold text-emerald-400">Bienvenido a NEXUS Sim.</span> Esta es tu consola de control completa. Podés ejecutar oleadas de simulación directamente desde la tab <span className="font-semibold text-violet-400">Oleadas</span>, usar el <span className="font-semibold text-violet-400">Pipeline Completo (5 pasos)</span>, evaluar resultados con <span className="font-semibold text-violet-400">LLM Judges</span> y orquestar crews con <span className="font-semibold text-violet-400">CrewAI</span>.
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
                         <div className="bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/50">
                           <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-sm">💬</span>
-                            <span className="font-medium text-zinc-100 text-xs">EN EL CHAT</span>
+                            <span className="text-sm">🚀</span>
+                            <span className="font-medium text-zinc-100 text-xs">OLEADAS</span>
                           </div>
-                          <p className="text-xs text-zinc-300">Envía comandos, pedí oleadas, activá agentes — todo pasa por Discord.</p>
+                          <p className="text-xs text-zinc-300">Ejecutá brainstorm, críticas, síntesis y más. Las oleadas están enfocadas en mejorar NEXUS.</p>
                         </div>
                         <div className="bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/50">
                           <div className="flex items-center gap-1.5 mb-1">
                             <span className="text-sm">📊</span>
-                            <span className="font-medium text-zinc-100 text-xs">EN ESTA APP</span>
+                            <span className="font-medium text-zinc-100 text-xs">ANÁLISIS</span>
                           </div>
-                          <p className="text-xs text-zinc-300">Mirá el dashboard, revisá memorias, explorá agentes y resultados en tiempo real.</p>
+                          <p className="text-xs text-zinc-300">Revisá memorias, skills, trust scores y evaluaciones de los jueces LLM.</p>
                         </div>
                         <div className="bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/50">
                           <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-sm">🔄</span>
-                            <span className="font-medium text-zinc-100 text-xs">SINCRONIZADO</span>
+                            <span className="text-sm">🤝</span>
+                            <span className="font-medium text-zinc-100 text-xs">ORQUESTACIÓN</span>
                           </div>
-                          <p className="text-xs text-zinc-300">La app se actualiza sola. Los datos de la simulación aparecen acá automáticamente.</p>
+                          <p className="text-xs text-zinc-300">CrewAI crews, pipelines automáticos, specs y propuestas — todo desde acá.</p>
                         </div>
                       </div>
                     </div>

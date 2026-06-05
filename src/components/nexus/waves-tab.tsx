@@ -13,10 +13,57 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Cpu, Play, Loader2, Rocket, Brain, Waves, Clock, X,
   Gauge, Calendar, MessageSquare, CheckCircle2, ExternalLink, Plus, ClipboardList,
+  Sparkles, Wrench, Layout, Zap, Target, Users, ArrowRight,
 } from 'lucide-react'
 import { WAVE_TYPES, WAVE_COLOR_MAP, WAVE_DOT_COLOR, STATUS_COLOR_MAP, MOOD_CONFIG, PIPELINE_STEPS } from '@/components/nexus/constants'
 import { AgentCard, LiveAgentCard } from '@/components/nexus/agent-card'
 import type { Project, Wave, LiveAgentState } from '@/components/nexus/types'
+
+// ===== Quick Prompts: Cómo mejorar la app =====
+const QUICK_PROMPTS = [
+  {
+    id: 'ux-improve',
+    label: 'Mejorar UX/UI',
+    icon: Layout,
+    waveType: 'brainstorm',
+    prompt: 'Analizá la interfaz actual de NEXUS Sim y proponé mejoras concretas de UX/UI. Pensá en: navegabilidad, feedback visual, accesibilidad, patrones de diseño modernos, micro-interacciones, y cómo hacer que el dashboard sea más intuitivo y atractivo para el usuario.',
+  },
+  {
+    id: 'perf-optimize',
+    label: 'Optimizar Performance',
+    icon: Zap,
+    waveType: 'critique',
+    prompt: 'Evaluá el rendimiento actual de NEXUS Sim y señalá cuellos de botella. Considerá: tiempos de carga de componentes, manejo de estado, tamaño del bundle, eficiencia de queries a la base de datos, y estrategias de lazy loading y caching.',
+  },
+  {
+    id: 'features-new',
+    label: 'Nuevas Features',
+    icon: Sparkles,
+    waveType: 'brainstorm',
+    prompt: 'Ideá features innovadoras que aún no tiene NEXUS Sim pero que le darían mucho valor. Pensá en: integraciones con herramientas externas, visualizaciones avanzadas, modos de interacción nuevos, gamificación, comparativas entre agentes, y experiencias colaborativas.',
+  },
+  {
+    id: 'wave-quality',
+    label: 'Calidad de Oleadas',
+    icon: Target,
+    waveType: 'critique',
+    prompt: 'Evaluá críticamente la calidad de las respuestas que generan los agentes en las oleadas. Señalá: respuestas genéricas vs sustanciales, profundidad del análisis, diversidad de perspectivas, y cómo mejorar los prompts del sistema para obtener respuestas de mayor calidad.',
+  },
+  {
+    id: 'architecture',
+    label: 'Mejorar Arquitectura',
+    icon: Wrench,
+    waveType: 'execute',
+    prompt: 'Analizá la arquitectura técnica actual de NEXUS Sim y proponé mejoras estructurales. Considerá: separación de concerns, testing, error handling, escalabilidad del monolito API, manejo de concurrencia en oleadas paralelas, y patrones de diseño aplicables.',
+  },
+  {
+    id: 'agents-smarter',
+    label: 'Agentes más Inteligentes',
+    icon: Brain,
+    waveType: 'brainstorm',
+    prompt: 'Cómo podemos hacer que los agentes de NEXUS sean más inteligentes y útiles? Pensá en: mejor uso de memorias a largo plazo, aprendizaje entre oleadas, personalización de prompts por división, razonamiento multi-paso, y mecanismos de auto-evaluación.',
+  },
+] as const
 
 interface WavesTabProps {
   project: Project
@@ -77,10 +124,48 @@ export function WavesTab({
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2"><Cpu className="h-4 w-4 text-emerald-400" />Simulación de Oleada</CardTitle>
-            <CardDescription className="text-zinc-300">Describe un problema o tema y selecciona los agentes</CardDescription>
+            <CardDescription className="text-zinc-300">Usá los Quick Prompts para enfocar agentes en mejorar NEXUS, o escribí tu propio tema</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea placeholder="Ejemplo: ¿Cómo deberíamos estructurar la autenticación en nuestra nueva aplicación móvil?" value={wavePrompt} onChange={(e) => setWavePrompt(e.target.value)} className="bg-zinc-800 border-zinc-700 text-sm min-h-[100px] resize-none" />
+            {/* Quick Prompts: Cómo mejorar la app */}
+            <div>
+              <p className="text-xs text-zinc-300 mb-2 flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-violet-400" />
+                <span className="font-medium text-violet-300">Quick Prompts — Cómo mejorar NEXUS</span>
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {QUICK_PROMPTS.map((qp) => {
+                  const QPIcon = qp.icon
+                  const isActive = wavePrompt === qp.prompt && waveType === qp.waveType
+                  return (
+                    <button
+                      key={qp.id}
+                      onClick={() => {
+                        setWavePrompt(qp.prompt)
+                        setWaveType(qp.waveType)
+                      }}
+                      className={`p-2.5 rounded-lg border text-left transition-all group ${
+                        isActive
+                          ? 'bg-violet-500/15 border-violet-500/40 ring-1 ring-violet-500/20'
+                          : 'bg-zinc-800/40 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <QPIcon className={`h-3 w-3 ${isActive ? 'text-violet-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                        <span className={`text-xs font-medium ${isActive ? 'text-violet-300' : 'text-zinc-300 group-hover:text-zinc-100'}`}>{qp.label}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className={`text-[8px] px-1 py-0 ${isActive ? 'border-violet-500/30 text-violet-400' : 'border-zinc-700 text-zinc-500'}`}>
+                          {WAVE_TYPES.find((w) => w.value === qp.waveType)?.label}
+                        </Badge>
+                        {isActive && <ArrowRight className="h-2.5 w-2.5 text-violet-400 ml-auto" />}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <Textarea placeholder="Escribí tu propio prompt o usá un Quick Prompt arriba..." value={wavePrompt} onChange={(e) => setWavePrompt(e.target.value)} className="bg-zinc-800 border-zinc-700 text-sm min-h-[100px] resize-none" />
             <div>
               <p className="text-xs text-zinc-300 mb-2">Tipo de Oleada</p>
               <div className="flex flex-wrap gap-2">

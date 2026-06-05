@@ -12,7 +12,7 @@ import {
   Map, CheckCircle2, Clock, AlertCircle, Rocket, Loader2, Circle,
   Zap, Database, Radio, GitBranch, BrainCircuit, Workflow, Container,
   Users, Plug, Gavel, FolderTree, Globe, ChevronRight,
-  Bug, Puzzle, Server,
+  Bug, Puzzle, Server, Sparkles, Repeat, Lightbulb, Wrench,
 } from 'lucide-react'
 
 // ===== Roadmap Data =====
@@ -230,6 +230,53 @@ const ROADMAP_PHASES: RoadmapPhase[] = [
       },
     ],
   },
+  {
+    id: 'phase-3',
+    title: 'Phase 3: Self-Improvement',
+    subtitle: 'NEXUS se auto-mejora — Oleadas enfocadas en mejorar la app',
+    color: 'text-violet-400',
+    borderColor: 'border-violet-500/30',
+    bgColor: 'bg-violet-500/5',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+    items: [
+      {
+        id: 'quick-prompts',
+        title: 'Quick Prompts — Enfoque en Auto-Mejora',
+        description: '6 prompts predefinidos enfocados en mejorar NEXUS: UX/UI, Performance, Features, Calidad de Oleadas, Arquitectura, Agentes más Inteligentes. Selección visual con auto-set de wave type.',
+        status: 'done',
+        tech: 'QUICK_PROMPTS / WavesTab / Violet UI / Auto Wave Type',
+        icon: Sparkles,
+        details: '6 quick prompts integrados en la tab Oleadas. Cada uno settea automáticamente el prompt y el tipo de oleada más apropiado (brainstorm, critique, execute). UI con grid de botones seleccionables, badges de tipo de oleada, y estado activo visual con anillo violeta.',
+      },
+      {
+        id: 'banner-fix',
+        title: 'Banner Corregido — Consola de Control Real',
+        description: 'Eliminar el banner engañoso que decía "no podés iniciar simulaciones" y reemplazarlo con info real sobre las capacidades de la app.',
+        status: 'done',
+        tech: 'Banner UX / nexus-content.tsx / Info Accuracy',
+        icon: Wrench,
+        details: 'Banner anterior afirmaba incorrectamente que la app era solo un panel de visualización. Actualizado para reflejar que es una consola de control completa con ejecución de oleadas, pipelines, LLM Judges, y CrewAI.',
+      },
+      {
+        id: 'auto-improve-loop',
+        title: 'Loop de Auto-Mejora Continua',
+        description: 'Las propuestas generadas por oleadas de auto-mejora se convierten automáticamente en specs, creando un ciclo virtuoso: oleada → propuesta → spec → implementación → evaluación.',
+        status: 'in-progress',
+        tech: 'Pipeline Auto-Link / Spec Auto-Create / Judge Re-evaluate',
+        icon: Repeat,
+        details: 'En desarrollo: cuando una oleada con quick prompt genera propuestas de mejora, estas se linkean automáticamente a specs. Los LLM Judges evalúan las mejoras implementadas. El trust de los agentes que proponen mejoras útiles sube, incentivando mejores contribuciones.',
+      },
+      {
+        id: 'smart-agent-selection',
+        title: 'Selección Inteligente de Agentes por Tema',
+        description: 'En vez de seleccionar agentes solo por división, usar el historial de trust y skills para elegir los mejores agentes para cada quick prompt.',
+        status: 'pending',
+        tech: 'Trust-Weighted Selection / Skill Matching / Auto-Select',
+        icon: Lightbulb,
+        details: 'Futuro: cada quick prompt tendrá un perfil de agentes ideales basado en divisiones + trust scores + skills relevantes. Auto-select elegirá los 8 mejores agentes para cada tema en vez de requerir selección manual.',
+      },
+    ],
+  },
 ]
 
 // ===== Completed Features (from worklog) =====
@@ -264,6 +311,8 @@ const COMPLETED_FEATURES = [
   { name: 'Multi-Proyecto + Cross-Project Transfer', icon: FolderTree },
   { name: 'Botardo-OS Module Export', icon: Globe },
   { name: 'Projects Tab (Gestión + Cross-Project)', icon: FolderTree },
+  { name: 'Quick Prompts — Auto-Mejora (6 prompts)', icon: Sparkles },
+  { name: 'Self-Improvement Loop (oleadas → specs)', icon: Repeat },
 ]
 
 function getStatusConfig(status: RoadmapItem['status']) {
@@ -327,7 +376,7 @@ export function RoadmapTab() {
           <div>
             <h3 className="text-sm font-medium text-zinc-200 mb-3 flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              Ya Construido (28 fases completadas)
+              Ya Construido (30 fases completadas)
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {COMPLETED_FEATURES.map((feat, i) => {

@@ -187,3 +187,26 @@ Stage Summary:
 - Total API endpoints: 20+
 - Total completed features: 27
 - Build successful, server running on port 3000 (200 OK)
+---
+Task ID: 1
+Agent: Main Agent
+Task: Reparar NEXUS Sim v2 + Cambiar foco de oleadas a auto-mejora
+
+Work Log:
+- Reparado banner mentiroso que decía "no podés iniciar simulaciones" → ahora dice "Consola de Control Completa"
+- Agregados 6 Quick Prompts enfocados en "cómo mejorar la app" en la tab Oleadas:
+  - Mejorar UX/UI (brainstorm)
+  - Optimizar Performance (critique)
+  - Nuevas Features (brainstorm)
+  - Calidad de Oleadas (critique)
+  - Mejorar Arquitectura (execute)
+  - Agentes más Inteligentes (brainstorm)
+- Actualizado roadmap con Phase 3: Self-Improvement (4 items: 2 done, 1 in-progress, 1 pending)
+- Actualizado count de features: 28 → 30
+- Build exitoso sin errores
+
+Stage Summary:
+- Archivos modificados: nexus-content.tsx, waves-tab.tsx, roadmap-tab.tsx
+- Nuevo feature: Quick Prompts grid en tab Oleadas con auto-set de wave type
+- Roadmap actualizado: 15/16 done + 1 in-progress + 1 pending en Phase 3
+- Server corriendo en puerto 3000, Caddy proxy en 81
