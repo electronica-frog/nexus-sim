@@ -116,21 +116,21 @@ const ROADMAP_PHASES: RoadmapPhase[] = [
     items: [
       {
         id: 'mem0',
-        title: 'Mem0 — Memoria Persistente con Embeddings',
-        description: 'Capa de memoria semantica profunda con embeddings. Los agentes recuerdan contexto de sesiones pasadas con significado, no solo texto.',
-        status: 'pending',
-        tech: 'Mem0 (open-source) / sentence-transformers',
+        title: 'Mem0 — Memoria a Largo Plazo con Decay',
+        description: 'Memoria persistente con decay exponencial, relevance scoring, consolidacion automatica y garbage collection.',
+        status: 'done',
+        tech: 'Prisma MemoryStore / Exponential Decay / Relevance Scoring',
         icon: BrainCircuit,
-        details: 'Upgrade del sistema actual de memoria (localStorage + SQLite). Mem0 permite recordar implicitamente y recall por similitud semantica.',
+        details: 'Tabla MemoryStore con campos: baseScore, decayRate, accessCount, lastAccessedAt. Formula: relevance = baseScore * e^(-decay*hours) * (1+log(accesses)) * recencyBoost. Extraccion automatica post-wave. Consolidacion de memorias similares. Garbage collection de memorias decaidas.',
       },
       {
         id: 'langgraph',
-        title: 'LangGraph — Pipelines como Grafos Condicionales',
-        description: 'Reemplazar el pipeline secuencial (brainstorm→critique→synthesize→execute→QA) con un grafo condicional donde cada paso decide el siguiente dinamicamente.',
-        status: 'pending',
-        tech: 'LangGraph (open-source)',
+        title: 'LangGraph — Agent Graphs / State Machines',
+        description: 'Grafos de flujo condicionales para cada tipo de oleada. Agentes se organizan en nodos con edges y decisiones dinamicas.',
+        status: 'done',
+        tech: 'agent-graph.ts / Custom Graph Interpreter',
         icon: Workflow,
-        details: 'Ejemplo: si brainstorm produce baja confianza, el grafo envia a critique extra antes de synthesize. Si QA falla, vuelve a execute automaticamente.',
+        details: '5 grafos definidos (brainstorm, critique, synthesize, execute, quality_gate). Nodos: agent, aggregate, decision, transform, output. Estrategias de seleccion: top_trust, division, random. Evaluacion de decisiones basada en mood y confidence.',
       },
       {
         id: 'docker',
@@ -232,6 +232,10 @@ const COMPLETED_FEATURES = [
   { name: 'Busqueda Vectorial TF-IDF', icon: Database },
   { name: 'Event Bus + Live SSE', icon: Radio },
   { name: 'CI/CD Pipeline (GitHub Actions)', icon: GitBranch },
+  { name: 'Mem0 Memory Store (decay + relevance)', icon: BrainCircuit },
+  { name: 'Agent Graphs / State Machines', icon: Workflow },
+  { name: 'ChromaDB Vector Search (384-dim)', icon: Database },
+  { name: 'Socket.io code (server + client)', icon: Radio },
 ]
 
 function getStatusConfig(status: RoadmapItem['status']) {
