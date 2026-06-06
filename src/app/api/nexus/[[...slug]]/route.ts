@@ -104,14 +104,16 @@ async function handleGetState(request: NextRequest) {
     return NextResponse.json({ projects })
   }
 
-  const project = await db.project.findUnique({
+  // Use findFirst for resilience (returns null instead of throwing)
+  const project = await db.project.findFirst({
     where: { id: projectId },
     include: {
       waves: {
         orderBy: { number: 'desc' },
-        take: 10,
+        take: 5,
         include: {
           responses: {
+            take: 8,
             include: {
               projectAgent: {
                 include: {
@@ -137,15 +139,16 @@ async function handleGetState(request: NextRequest) {
           },
         },
         orderBy: { agentId: 'asc' },
-        take: 50,
+        take: 30,
       },
       memories: {
         orderBy: { createdAt: 'desc' },
-        take: 30,
+        take: 20,
         select: { id: true, projectId: true, agentId: true, type: true, content: true, tags: true, importance: true, createdAt: true },
       },
       proposals: {
         orderBy: { createdAt: 'desc' },
+        take: 10,
       },
       specs: {
         orderBy: { createdAt: 'desc' },

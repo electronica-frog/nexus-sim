@@ -21,10 +21,8 @@ const nextConfig: NextConfig = {
       'recharts',
     ],
   },
-  // Reduce memory pressure from static generation
+  // Use standalone for production deployment
   output: 'standalone',
-  // Limit concurrent SSR requests to prevent memory spikes
-  // (implicit: Next.js 16 handles this natively with cpus: 1)
 };
 
 export default nextConfig;

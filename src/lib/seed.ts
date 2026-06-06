@@ -108,6 +108,19 @@ function parseAllAgents(baseDir: string): AgentData[] {
 
 export async function seedAgents() {
   const agencyDir = path.join(process.cwd(), 'agency-agents')
+
+  // Gracefully handle missing agency-agents directory
+  if (!fs.existsSync(agencyDir)) {
+    console.warn(`[seed] agency-agents directory not found at ${agencyDir}. Skipping seed.`)
+    // Return existing project data instead of failing
+    const existingProject = await db.project.findFirst({ orderBy: { createdAt: 'desc' } })
+    if (existingProject) {
+      const agentCount = await db.agent.count()
+      return { agentsCount: agentCount, projectId: existingProject.id, projectName: existingProject.name, skipped: true }
+    }
+    return { agentsCount: 0, projectId: null, projectName: null, skipped: true }
+  }
+
   const agents = parseAllAgents(agencyDir)
 
   console.log(`Found ${agents.length} agent definitions`)
