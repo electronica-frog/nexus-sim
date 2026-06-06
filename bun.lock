@@ -41,7 +41,6 @@
         "@reactuses/core": "^6.0.5",
         "@tanstack/react-query": "^5.82.0",
         "@tanstack/react-table": "^8.21.3",
-        "chromadb": "^3.4.3",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
@@ -54,7 +53,6 @@
         "next-auth": "^4.24.11",
         "next-intl": "^4.3.4",
         "next-themes": "^0.4.6",
-        "prisma": "^6.11.1",
         "react": "^19.0.0",
         "react-day-picker": "^9.8.0",
         "react-dom": "^19.0.0",
@@ -82,6 +80,7 @@
         "bun-types": "^1.3.4",
         "eslint": "^9",
         "eslint-config-next": "^16.1.1",
+        "prisma": "^6.11.1",
         "tailwindcss": "^4",
         "tw-animate-css": "^1.3.5",
         "typescript": "^5",
@@ -874,18 +873,6 @@
     "character-reference-invalid": ["character-reference-invalid@2.0.1", "https://registry.npmjs.com/character-reference-invalid/-/character-reference-invalid-2.0.1.tgz", {}, "sha512-iBZ4F4wRbyORVsu0jPV7gXkOsGYjGHPmAyv+HiHG8gi5PtC9KI2j1+v8/tlibRvjoWX027ypmG/n0HtO5t7unw=="],
 
     "chokidar": ["chokidar@4.0.3", "https://registry.npmjs.com/chokidar/-/chokidar-4.0.3.tgz", { "dependencies": { "readdirp": "^4.0.1" } }, "sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA=="],
-
-    "chromadb": ["chromadb@3.4.3", "", { "dependencies": { "semver": "^7.7.1" }, "optionalDependencies": { "chromadb-js-bindings-darwin-arm64": "^1.3.3", "chromadb-js-bindings-darwin-x64": "^1.3.3", "chromadb-js-bindings-linux-arm64-gnu": "^1.3.3", "chromadb-js-bindings-linux-x64-gnu": "^1.3.3", "chromadb-js-bindings-win32-x64-msvc": "^1.3.3" }, "bin": { "chroma": "dist/cli.mjs" } }, "sha512-AouHyTh70Ux1w5TKDmk54wGAszY7NtU/DXyC7o3qGuE8b+b1nT/W3+s8UVd9XwqGZIR4A76+g4u7yJuV/WU3OA=="],
-
-    "chromadb-js-bindings-darwin-arm64": ["chromadb-js-bindings-darwin-arm64@1.3.4", "", { "os": "darwin", "cpu": "arm64" }, "sha512-pDdWCcR0hCz3pSDiIijBito7YG6FumewfzYE2mIjSwjrO1CKSfQKLwDdTVK4ZNpVGQa16ePoMX+pg7ShSUARJg=="],
-
-    "chromadb-js-bindings-darwin-x64": ["chromadb-js-bindings-darwin-x64@1.3.4", "", { "os": "darwin", "cpu": "x64" }, "sha512-5vKVFXSFo+S9qC9by/7oofjcXqQK4IGHiUnPrvTfc7B52gNlPSKeyDO1wha556COc3KtXSZjICEH0nYBJ8UXng=="],
-
-    "chromadb-js-bindings-linux-arm64-gnu": ["chromadb-js-bindings-linux-arm64-gnu@1.3.4", "", { "os": "linux", "cpu": "arm64" }, "sha512-ELiqDZzU5mZd1BvZugGrhoMkVeNyQaa+PGizd06WIpIJVoHY+S+9ZBjdeM6ZkRnL3vTxD79XBrosxNWhzqy/kg=="],
-
-    "chromadb-js-bindings-linux-x64-gnu": ["chromadb-js-bindings-linux-x64-gnu@1.3.4", "", { "os": "linux", "cpu": "x64" }, "sha512-HmTUe7PEIaBngCQ70Yyle81z2wYyg9OMgJYyRUNBYCBp4ED6zTmdaOro41Vs/c/h2UyQeBXFIKNmHDeD2Nr2fw=="],
-
-    "chromadb-js-bindings-win32-x64-msvc": ["chromadb-js-bindings-win32-x64-msvc@1.3.4", "", { "os": "win32", "cpu": "x64" }, "sha512-punrofQRzKspNMxHmv24qoPeRycV2T3KfedekGV4lOuPPG14i6qggS4x/OWLSAK7ozPfBbrzCejvCa5wfvujhQ=="],
 
     "citty": ["citty@0.1.6", "https://registry.npmjs.com/citty/-/citty-0.1.6.tgz", { "dependencies": { "consola": "^3.2.3" } }, "sha512-tskPPKEs8D2KPafUypv2gxwJP8h/OaJmC82QQGGDQcHvXX43xF2VDACcJVmZ0EuSxkpO9Kc4MlrA3q0+FG58AQ=="],
 

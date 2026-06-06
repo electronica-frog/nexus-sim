@@ -33,3 +33,26 @@ Stage Summary:
 - 10 concurrent requests: todas 200 OK
 - Reducción estimada de memoria en cold-start: ~60-70% (dynamic imports)
 - Eliminación de ~118MB de deps muertas (chromadb + prisma CLI)
+
+---
+Task ID: 2
+Agent: Main Coordinator + 2 Audit Agents + 4 Fix Agents
+Task: Oleada de mejoras NEXUS Sim v2 — auditoría + 16 fixes
+
+Work Log:
+- Lanzó 2 agentes de auditoría en paralelo (UI components + API/lib files)
+- UI Audit: 23 issues (5 high, 11 medium, 7 low)
+- API/Lib Audit: 28 issues (11 high, 11 medium, 6 low)
+- Lanzó 4 agentes de fix en paralelo:
+  - Agente A: 10 empty catch blocks → toast.error + AlertDialog en 3 delete ops
+  - Agente B: 4 N+1 queries fixed (87-95% reduction) + chroma-store async
+  - Agente C: tabs overflow, wave buttons, mock agents→real, dead code removed
+  - Agente D: 14 try/catch wrappers, input validation, export limits
+
+Stage Summary:
+- Build exitoso (0 new errors)
+- 11/11 tests pasados: 4 functional (200), 3 validation (400 correct), 5 concurrent (200)
+- Validation working: chroma-index requires projectId, wave-stream validates JSON and fields
+- chroma-store now async (non-blocking event loop)
+- All delete operations now have AlertDialog confirmation
+- Server stable en dev mode con Turbopack

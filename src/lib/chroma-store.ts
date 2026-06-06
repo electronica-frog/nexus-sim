@@ -3,15 +3,18 @@
  * Uses ChromaDB's PersistentClient via Python script (embed.py) for semantic embeddings.
  * all-MiniLM-L6-v2 model → 384-dim vectors with cosine similarity.
  * 
- * Strategy: Call Python embed.py via child_process.execFileSync for:
+ * Strategy: Call Python embed.py via child_process.execFile (async) for:
  * - Generating embeddings (for new memories/skills/waves)
  * - Semantic search queries (ChromaDB handles the full search)
  * - CRUD operations on collections
  * 
  * Data persists in .chroma-data/ directory (SQLite + HNSW indices).
  */
-import { execFileSync } from 'child_process'
+import { execFile } from 'child_process'
+import { promisify } from 'util'
 import path from 'path'
+
+const execFileAsync = promisify(execFile)
 
 const EMBED_SCRIPT = path.join(process.cwd(), 'embed.py')
 const PYTHON = process.env.PYTHON_PATH || 'python3'
@@ -37,15 +40,14 @@ interface CollectionInfo {
   count: number
 }
 
-function runChroma(input: Record<string, unknown>): Record<string, unknown> {
+async function runChroma(input: Record<string, unknown>): Promise<Record<string, unknown>> {
   try {
-    const result = execFileSync(PYTHON, [EMBED_SCRIPT], {
+    const { stdout } = await execFileAsync(PYTHON, [EMBED_SCRIPT], {
       input: JSON.stringify(input),
       maxBuffer: 50 * 1024 * 1024, // 50MB for large results
       timeout: 60000, // 60s timeout
-      encoding: 'utf-8',
     })
-    return JSON.parse(result.trim())
+    return JSON.parse(stdout.trim())
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error)
     // Try to parse error from Python stdout
@@ -65,7 +67,7 @@ function runChroma(input: Record<string, unknown>): Record<string, unknown> {
  * Generate embeddings for a list of texts using ChromaDB's all-MiniLM-L6-v2 model.
  * Returns 384-dim float vectors.
  */
-export function generateEmbeddings(texts: string[]): number[][] {
+export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   if (!texts || texts.length === 0) return []
   
   // ChromaDB handles batching well, but limit to 100 at a time
@@ -74,7 +76,7 @@ export function generateEmbeddings(texts: string[]): number[][] {
   
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
     const batch = texts.slice(i, i + BATCH_SIZE)
-    const result = runChroma({ action: 'embed', texts: batch }) as EmbedResult
+    const result = await runChroma({ action: 'embed', texts: batch }) as EmbedResult
     allEmbeddings.push(...result.embeddings)
   }
   
@@ -86,12 +88,12 @@ export function generateEmbeddings(texts: string[]): number[][] {
 /**
  * Add documents to a ChromaDB collection. Auto-generates embeddings.
  */
-export function addToCollection(
+export async function addToCollection(
   collection: string,
   ids: string[],
   documents: string[],
   metadatas?: Record<string, unknown>[],
-): { success: boolean; count: number } {
+): Promise<{ success: boolean; count: number }> {
   const input: Record<string, unknown> = {
     action: 'add',
     collection,
@@ -100,19 +102,19 @@ export function addToCollection(
   }
   if (metadatas) input.metadatas = metadatas
   
-  return runChroma(input) as { success: boolean; count: number }
+  return await runChroma(input) as { success: boolean; count: number }
 }
 
 /**
  * Query a collection with semantic search.
  * Returns documents sorted by similarity (cosine distance).
  */
-export function queryCollection(
+export async function queryCollection(
   collection: string,
   queryTexts: string[],
   nResults: number = 10,
   whereFilter?: Record<string, unknown>,
-): QueryResult {
+): Promise<QueryResult> {
   const input: Record<string, unknown> = {
     action: 'query',
     collection,
@@ -121,39 +123,39 @@ export function queryCollection(
   }
   if (whereFilter) input.where = whereFilter
   
-  return runChroma(input) as QueryResult
+  return await runChroma(input) as QueryResult
 }
 
 /**
  * Delete documents from a collection.
  */
-export function deleteFromCollection(
+export async function deleteFromCollection(
   collection: string,
   ids: string[],
-): { success: boolean } {
-  return runChroma({ action: 'delete', collection, ids }) as { success: boolean }
+): Promise<{ success: boolean }> {
+  return await runChroma({ action: 'delete', collection, ids }) as { success: boolean }
 }
 
 /**
  * Get document count in a collection.
  */
-export function getCollectionCount(collection: string): number {
-  const result = runChroma({ action: 'count', collection }) as CountResult
+export async function getCollectionCount(collection: string): Promise<number> {
+  const result = await runChroma({ action: 'count', collection }) as CountResult
   return result.count
 }
 
 /**
  * Reset (delete) a collection.
  */
-export function resetCollection(collection: string): { success: boolean } {
-  return runChroma({ action: 'reset', collection }) as { success: boolean }
+export async function resetCollection(collection: string): Promise<{ success: boolean }> {
+  return await runChroma({ action: 'reset', collection }) as { success: boolean }
 }
 
 /**
  * List all collections.
  */
-export function listCollections(): CollectionInfo[] {
-  const result = runChroma({ action: 'list_collections' }) as { collections: CollectionInfo[] }
+export async function listCollections(): Promise<CollectionInfo[]> {
+  const result = await runChroma({ action: 'list_collections' }) as { collections: CollectionInfo[] }
   return result.collections
 }
 

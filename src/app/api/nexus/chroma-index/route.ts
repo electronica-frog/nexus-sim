@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
     const projectId = searchParams.get('projectId')
     const forceReset = searchParams.get('reset') === 'true'
 
+    if (!projectId) {
+      return NextResponse.json({ error: 'Se requiere projectId para indexar' }, { status: 400 })
+    }
+
     // ===== INDEX MEMORIES =====
     const memoryWhere: Record<string, unknown> = projectId ? { projectId } : {}
     const memories = await db.agentMemory.findMany({
@@ -24,8 +28,8 @@ export async function POST(request: NextRequest) {
     })
 
     if (forceReset) {
-      try { resetCollection('nexus-memories') } catch { /* collection may not exist yet */ }
-      try { resetCollection('nexus-skills') } catch { /* collection may not exist yet */ }
+      try { await resetCollection('nexus-memories') } catch { /* collection may not exist yet */ }
+      try { await resetCollection('nexus-skills') } catch { /* collection may not exist yet */ }
     }
 
     let memoriesIndexed = 0
@@ -44,7 +48,7 @@ export async function POST(request: NextRequest) {
         createdAt: m.createdAt.toISOString(),
       }))
 
-      const result = addToCollection('nexus-memories', ids, documents, metadatas)
+      const result = await addToCollection('nexus-memories', ids, documents, metadatas)
       memoriesIndexed += result.count
     }
 
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
         projectId: s.projectId,
       }))
 
-      const result = addToCollection('nexus-skills', ids, documents, metadatas)
+      const result = await addToCollection('nexus-skills', ids, documents, metadatas)
       skillsIndexed += result.count
     }
 
@@ -96,8 +100,8 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    const memoriesCount = getCollectionCount('nexus-memories')
-    const skillsCount = getCollectionCount('nexus-skills')
+    const memoriesCount = await getCollectionCount('nexus-memories')
+    const skillsCount = await getCollectionCount('nexus-skills')
 
     return NextResponse.json({
       status: 'ok',

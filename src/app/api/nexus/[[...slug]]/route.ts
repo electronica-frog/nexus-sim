@@ -165,58 +165,68 @@ async function handleGetState(request: NextRequest) {
 
 // ===== POST /api/nexus/project - Create project =====
 async function handleCreateProject(request: NextRequest) {
-  const body = await request.json()
-  const { name, description } = body
+  try {
+    const body = await request.json()
+    const { name, description } = body
 
-  if (!name) {
-    return NextResponse.json({ error: 'Se requiere nombre del proyecto' }, { status: 400 })
+    if (!name) {
+      return NextResponse.json({ error: 'Se requiere nombre del proyecto' }, { status: 400 })
+    }
+
+    const project = await db.project.create({
+      data: {
+        name,
+        description: description || '',
+        status: 'active',
+      },
+    })
+
+    const allAgents = await db.agent.findMany()
+    const agentData = allAgents.map(agent => ({
+      projectId: project.id,
+      agentId: agent.id,
+      role: agent.agentId.includes('orchestrator')
+        ? 'orchestrator'
+        : agent.division === 'testing'
+          ? 'qa'
+          : agent.division === 'specialized'
+            ? 'specialist'
+            : 'team',
+      status: 'idle',
+    }))
+    await db.projectAgent.createMany({ data: agentData })
+
+    return NextResponse.json({ project, agentsAssigned: agentData.length })
+  } catch (error) {
+    console.error('Create project failed:', error)
+    return NextResponse.json({ error: 'Error al crear proyecto' }, { status: 500 })
   }
-
-  const project = await db.project.create({
-    data: {
-      name,
-      description: description || '',
-      status: 'active',
-    },
-  })
-
-  const allAgents = await db.agent.findMany()
-  const agentData = allAgents.map(agent => ({
-    projectId: project.id,
-    agentId: agent.id,
-    role: agent.agentId.includes('orchestrator')
-      ? 'orchestrator'
-      : agent.division === 'testing'
-        ? 'qa'
-        : agent.division === 'specialized'
-          ? 'specialist'
-          : 'team',
-    status: 'idle',
-  }))
-  await db.projectAgent.createMany({ data: agentData })
-
-  return NextResponse.json({ project, agentsAssigned: agentData.length })
 }
 
 // ===== POST /api/nexus/spec - Create spec =====
 async function handleCreateSpec(request: NextRequest) {
-  const body = await request.json()
-  const { projectId, title, description, priority } = body
+  try {
+    const body = await request.json()
+    const { projectId, title, description, priority } = body
 
-  if (!projectId || !title) {
-    return NextResponse.json({ error: 'Se requieren projectId y title' }, { status: 400 })
+    if (!projectId || !title) {
+      return NextResponse.json({ error: 'Se requieren projectId y title' }, { status: 400 })
+    }
+
+    const spec = await db.spec.create({
+      data: {
+        projectId,
+        title,
+        description: description || '',
+        priority: priority || 'medium',
+      },
+    })
+
+    return NextResponse.json({ spec })
+  } catch (error) {
+    console.error('Create spec failed:', error)
+    return NextResponse.json({ error: 'Error al crear spec' }, { status: 500 })
   }
-
-  const spec = await db.spec.create({
-    data: {
-      projectId,
-      title,
-      description: description || '',
-      priority: priority || 'medium',
-    },
-  })
-
-  return NextResponse.json({ spec })
 }
 
 // ===== GET /api/nexus/specs - List specs =====
@@ -271,15 +281,20 @@ async function handleUpdateSpec(request: NextRequest) {
 
 // ===== DELETE /api/nexus/spec?id=xxx - Delete spec =====
 async function handleDeleteSpec(request: NextRequest) {
-  const specId = request.nextUrl.searchParams.get('id')
+  try {
+    const specId = request.nextUrl.searchParams.get('id')
 
-  if (!specId) {
-    return NextResponse.json({ error: 'Se requiere ID de spec (query param ?id=)' }, { status: 400 })
+    if (!specId) {
+      return NextResponse.json({ error: 'Se requiere ID de spec (query param ?id=)' }, { status: 400 })
+    }
+
+    await db.spec.delete({ where: { id: specId } })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Delete spec failed:', error)
+    return NextResponse.json({ error: 'Error al eliminar spec' }, { status: 500 })
   }
-
-  await db.spec.delete({ where: { id: specId } })
-
-  return NextResponse.json({ success: true })
 }
 
 // ===== POST /api/nexus/wave - Run a wave =====
@@ -776,8 +791,8 @@ async function handleGetSharedLearnings(request: NextRequest) {
 async function handleGetChromaIndex() {
   try {
     const { getCollectionCount } = await import('@/lib/chroma-store')
-    const memoriesCount = getCollectionCount('nexus-memories')
-    const skillsCount = getCollectionCount('nexus-skills')
+    const memoriesCount = await getCollectionCount('nexus-memories')
+    const skillsCount = await getCollectionCount('nexus-skills')
     return NextResponse.json({
       status: 'ok',
       collections: { 'nexus-memories': memoriesCount, 'nexus-skills': skillsCount },
@@ -799,14 +814,14 @@ async function handlePostChromaIndex(request: NextRequest) {
     const memories = await db.agentMemory.findMany({ where: memoryWhere, orderBy: { createdAt: 'desc' } })
 
     if (forceReset) {
-      try { resetCollection('nexus-memories') } catch {}
-      try { resetCollection('nexus-skills') } catch {}
+      try { await resetCollection('nexus-memories') } catch {}
+      try { await resetCollection('nexus-skills') } catch {}
     }
 
     let memoriesIndexed = 0
     for (let i = 0; i < memories.length; i += 100) {
       const batch = memories.slice(i, i + 100)
-      const result = addToCollection('nexus-memories',
+      const result = await addToCollection('nexus-memories',
         batch.map(m => m.id), batch.map(m => m.content),
         batch.map(m => ({ agentId: m.agentId, type: m.type, importance: m.importance, projectId: m.projectId, tags: m.tags, createdAt: m.createdAt.toISOString() }))
       )
@@ -817,7 +832,7 @@ async function handlePostChromaIndex(request: NextRequest) {
     let skillsIndexed = 0
     for (let i = 0; i < skills.length; i += 100) {
       const batch = skills.slice(i, i + 100)
-      const result = addToCollection('nexus-skills',
+      const result = await addToCollection('nexus-skills',
         batch.map(s => s.id), batch.map(s => s.description),
         batch.map(s => ({ agentId: s.agentId, name: s.name, quality: s.quality, timesUsed: s.timesUsed, projectId: s.projectId }))
       )
@@ -858,33 +873,42 @@ async function handleMemorySearchTFIDF(request: NextRequest) {
   // Search using TF-IDF + cosine similarity
   const searchResults = search(index, q, limit)
 
-  // Enrich results with agent info
-  const enriched = await Promise.all(
-    searchResults.map(async (r) => {
-      const memory = memories.find((m) => m.id === r.id)
-      if (!memory) return null
-      const agent = await db.agent.findUnique({ where: { id: memory.agentId } })
-      return {
-        id: r.id,
-        agentId: memory.agentId,
-        agentName: agent?.name || 'Desconocido',
-        agentEmoji: agent?.emoji || '🤖',
-        agentDivision: agent?.division || 'unknown',
-        content: r.content,
-        tags: memory.tags.split(',').map((t) => t.trim()),
-        importance: memory.importance,
-        type: memory.type,
-        createdAt: memory.createdAt,
-        score: r.score,
-        matchedTerms: r.matchedTerms,
-      }
-    }),
-  )
+  // Batch-fetch agent info (fix N+1)
+  const searchMemoryIds = searchResults.map(r => r.id)
+  const searchMemories = memories.filter(m => searchMemoryIds.includes(m.id))
+  const searchAgentIds = [...new Set(searchMemories.map(m => m.agentId))]
+  const searchAgentsMap = new Map<string, { name: string; emoji: string; division: string }>()
+  if (searchAgentIds.length > 0) {
+    const searchAgents = await db.agent.findMany({ where: { id: { in: searchAgentIds } }, select: { id: true, name: true, emoji: true, division: true } })
+    for (const a of searchAgents) searchAgentsMap.set(a.id, a)
+  }
+  const searchMemMap = new Map(searchMemories.map(m => [m.id, m]))
+
+  // Enrich results with agent info (no DB queries)
+  const enriched = searchResults.map(r => {
+    const memory = searchMemMap.get(r.id)
+    if (!memory) return null
+    const agent = searchAgentsMap.get(memory.agentId)
+    return {
+      id: r.id,
+      agentId: memory.agentId,
+      agentName: agent?.name || 'Desconocido',
+      agentEmoji: agent?.emoji || '🤖',
+      agentDivision: agent?.division || 'unknown',
+      content: r.content,
+      tags: memory.tags.split(',').map((t) => t.trim()),
+      importance: memory.importance,
+      type: memory.type,
+      createdAt: memory.createdAt,
+      score: r.score,
+      matchedTerms: r.matchedTerms,
+    }
+  }).filter(Boolean)
 
   return NextResponse.json({
     query: q,
-    results: enriched.filter(Boolean),
-    total: enriched.filter(Boolean).length,
+    results: enriched,
+    total: enriched.length,
     searchType: 'tfidf',
   })
 }
@@ -902,34 +926,44 @@ async function handleMemorySearch(request: NextRequest) {
   try {
     // Try ChromaDB semantic search first
     const { queryCollection } = await import('@/lib/chroma-store')
-    const results = queryCollection('nexus-memories', [q], limit, { projectId })
+    const results = await queryCollection('nexus-memories', [q], limit, { projectId })
 
     if (results.ids[0] && results.ids[0].length > 0) {
-      // Enrich with agent info from SQLite
-      const enriched = await Promise.all(
-        results.ids[0].map(async (id, idx) => {
-          const memory = await db.agentMemory.findUnique({ where: { id } })
-          if (!memory) return null
-          const agent = await db.agent.findUnique({ where: { id: memory.agentId } })
-          const distance = results.distances[0][idx]
-          // Convert cosine distance to similarity score (0-1, where 1 = identical)
-          const score = 1 - Math.min(distance, 1)
-          return {
-            id: memory.id,
-            agentId: memory.agentId,
-            agentName: agent?.name || 'Desconocido',
-            agentEmoji: agent?.emoji || '🤖',
-            agentDivision: agent?.division || 'unknown',
-            content: results.documents[0][idx] || memory.content,
-            tags: memory.tags.split(',').map((t) => t.trim()),
-            importance: memory.importance,
-            type: memory.type,
-            createdAt: memory.createdAt,
-            score,
-            matchedTerms: [], // semantic search doesn't use term matching
-          }
-        }),
-      )
+      // Batch-fetch memories and agents (fix N+1)
+      const memoryIds = results.ids[0] as string[]
+      const memories = await db.agentMemory.findMany({
+        where: { id: { in: memoryIds } },
+        select: { id: true, agentId: true, tags: true, importance: true, type: true, createdAt: true, projectId: true },
+      })
+      const agentIds = [...new Set(memories.map(m => m.agentId))]
+      const agents = agentIds.length > 0 ? await db.agent.findMany({
+        where: { id: { in: agentIds } },
+        select: { id: true, name: true, emoji: true, division: true },
+      }) : []
+      const agentsMap = new Map(agents.map(a => [a.id, a]))
+      const memMap = new Map(memories.map(m => [m.id, m]))
+
+      const enriched = results.ids[0].map((id, idx) => {
+        const memory = memMap.get(id)
+        if (!memory) return null
+        const agent = agentsMap.get(memory.agentId)
+        const distance = results.distances[0][idx]
+        const score = 1 - Math.min(distance, 1)
+        return {
+          id: memory.id,
+          agentId: memory.agentId,
+          agentName: agent?.name || 'Desconocido',
+          agentEmoji: agent?.emoji || '🤖',
+          agentDivision: agent?.division || 'unknown',
+          content: results.documents[0][idx] || '',
+          tags: memory.tags.split(',').map((t) => t.trim()),
+          importance: memory.importance,
+          type: memory.type,
+          createdAt: memory.createdAt,
+          score,
+          matchedTerms: [],
+        }
+      })
       return NextResponse.json({
         query: q,
         results: enriched.filter(Boolean),
@@ -992,25 +1026,30 @@ async function handleGetSkills(request: NextRequest) {
 
 // ===== PUT /api/nexus/proposal?id=xxx - Update proposal =====
 async function handleUpdateProposal(request: NextRequest) {
-  const proposalId = request.nextUrl.searchParams.get('id')
+  try {
+    const proposalId = request.nextUrl.searchParams.get('id')
 
-  if (!proposalId) {
-    return NextResponse.json({ error: 'Se requiere ID de propuesta (query param ?id=)' }, { status: 400 })
+    if (!proposalId) {
+      return NextResponse.json({ error: 'Se requiere ID de propuesta (query param ?id=)' }, { status: 400 })
+    }
+
+    const body = await request.json()
+    const { status } = body
+
+    if (!status) {
+      return NextResponse.json({ error: 'Se requiere status de propuesta' }, { status: 400 })
+    }
+
+    const proposal = await db.proposal.update({
+      where: { id: proposalId },
+      data: { status },
+    })
+
+    return NextResponse.json({ proposal })
+  } catch (error) {
+    console.error('Update proposal failed:', error)
+    return NextResponse.json({ error: 'Error al actualizar propuesta' }, { status: 500 })
   }
-
-  const body = await request.json()
-  const { status } = body
-
-  if (!status) {
-    return NextResponse.json({ error: 'Se requiere status de propuesta' }, { status: 400 })
-  }
-
-  const proposal = await db.proposal.update({
-    where: { id: proposalId },
-    data: { status },
-  })
-
-  return NextResponse.json({ proposal })
 }
 
 // ===== CSV Helper =====
@@ -1033,17 +1072,19 @@ function buildCSV(headers: string[], rows: (string | number | boolean | null | u
 
 // ===== GET /api/nexus/export/waves - Export waves + responses =====
 async function handleExportWaves(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const projectId = searchParams.get('projectId')
-  const format = searchParams.get('format') || 'json'
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const projectId = searchParams.get('projectId')
+    const format = searchParams.get('format') || 'json'
 
-  if (!projectId) {
-    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
-  }
+    if (!projectId) {
+      return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+    }
 
-  const waves = await db.wave.findMany({
+    const waves = await db.wave.findMany({
     where: { projectId },
     orderBy: { number: 'asc' },
+    take: 500,
     include: {
       responses: {
         include: { projectAgent: { include: { agent: { select: { id: true, agentId: true, name: true, division: true, emoji: true } } } } },
@@ -1086,27 +1127,34 @@ async function handleExportWaves(request: NextRequest) {
       'Content-Disposition': `attachment; filename="nexus-oleadas-${timestamp}.json"`,
     },
   })
+  } catch (error) {
+    console.error('Export waves failed:', error)
+    return NextResponse.json({ error: 'Error al exportar oleadas' }, { status: 500 })
+  }
 }
 
 // ===== GET /api/nexus/export/metrics - Export agent metrics =====
 async function handleExportMetrics(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const projectId = searchParams.get('projectId')
-  const format = searchParams.get('format') || 'json'
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const projectId = searchParams.get('projectId')
+    const format = searchParams.get('format') || 'json'
 
-  if (!projectId) {
-    return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
-  }
+    if (!projectId) {
+      return NextResponse.json({ error: 'Se requiere projectId' }, { status: 400 })
+    }
 
-  const projectAgents = await db.projectAgent.findMany({
-    where: { projectId },
-    include: {
-      agent: {
-        select: { id: true, agentId: true, name: true, division: true, emoji: true },
+    const projectAgents = await db.projectAgent.findMany({
+      where: { projectId },
+      include: {
+        agent: {
+          select: { id: true, agentId: true, name: true, division: true, emoji: true },
+        },
+        responses: {
+          take: 500,
+        },
       },
-      responses: true,
-    },
-  })
+    })
 
   const metrics = projectAgents.map((pa) => {
     const responses = pa.responses
@@ -1154,6 +1202,10 @@ async function handleExportMetrics(request: NextRequest) {
       'Content-Disposition': `attachment; filename="nexus-metricas-${timestamp}.json"`,
     },
   })
+  } catch (error) {
+    console.error('Export metrics failed:', error)
+    return NextResponse.json({ error: 'Error al exportar métricas' }, { status: 500 })
+  }
 }
 
 // ===== GET /api/nexus/export/memories - Export memories =====

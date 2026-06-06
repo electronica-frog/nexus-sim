@@ -107,10 +107,10 @@ export function DashboardTab({
     <>
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Users} label="Agentes" value={project.agents.length} color="text-cyan-400" />
-        <StatCard icon={Waves} label="Oleadas" value={project.waves.length} color="text-amber-400" />
-        <StatCard icon={Target} label="Propuestas" value={project.proposals.length} color="text-purple-400" />
-        <StatCard icon={FileText} label="Memorias" value={project.memories.length} color="text-emerald-400" />
+        <StatCard icon={Users} label="Agentes" value={dashboard?.totalAgents ?? project.agents.length} color="text-cyan-400" />
+        <StatCard icon={Waves} label="Oleadas" value={dashboard?.totalWaves ?? project.waves.length} color="text-amber-400" />
+        <StatCard icon={Target} label="Propuestas" value={dashboard?.totalProposals ?? project.proposals.length} color="text-purple-400" />
+        <StatCard icon={FileText} label="Memorias" value={dashboard?.totalMemories ?? project.memories.length} color="text-emerald-400" />
       </div>
 
       {/* Live Connection Indicator */}

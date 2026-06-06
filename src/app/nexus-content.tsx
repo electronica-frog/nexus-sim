@@ -284,18 +284,18 @@ export default function NexusContent() {
             <Tabs value={activeTab} onValueChange={(v) => {
               setActiveTab(v)
             }}>
-              <TabsList className="bg-zinc-900 border border-zinc-800 mb-6">
-                <TabsTrigger value="projects" className="data-[state=active]:bg-zinc-800"><FolderTree className="h-3.5 w-3.5 mr-1.5" />Proyectos</TabsTrigger>
-                <TabsTrigger value="roadmap" className="data-[state=active]:bg-zinc-800"><Map className="h-3.5 w-3.5 mr-1.5" />Roadmap</TabsTrigger>
-                <TabsTrigger value="dashboard" className="data-[state=active]:bg-zinc-800"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Dashboard</TabsTrigger>
-                <TabsTrigger value="agents" className="data-[state=active]:bg-zinc-800"><Users className="h-3.5 w-3.5 mr-1.5" />Agentes</TabsTrigger>
-                <TabsTrigger value="waves" className="data-[state=active]:bg-zinc-800"><Waves className="h-3.5 w-3.5 mr-1.5" />Oleadas</TabsTrigger>
-                <TabsTrigger value="memory" className="data-[state=active]:bg-zinc-800"><FileText className="h-3.5 w-3.5 mr-1.5" />Memoria</TabsTrigger>
-                <TabsTrigger value="mem0" className="data-[state=active]:bg-zinc-800"><Brain className="h-3.5 w-3.5 mr-1.5" />Mem0</TabsTrigger>
-                <TabsTrigger value="specs" className="data-[state=active]:bg-zinc-800"><ClipboardList className="h-3.5 w-3.5 mr-1.5" />Specs</TabsTrigger>
-                <TabsTrigger value="proposals" className="data-[state=active]:bg-zinc-800"><Target className="h-3.5 w-3.5 mr-1.5" />Propuestas</TabsTrigger>
-                <TabsTrigger value="crew" className="data-[state=active]:bg-zinc-800"><Users className="h-3.5 w-3.5 mr-1.5" />CrewAI</TabsTrigger>
-                <TabsTrigger value="judges" className="data-[state=active]:bg-zinc-800"><Gavel className="h-3.5 w-3.5 mr-1.5" />Judges</TabsTrigger>
+              <TabsList className="bg-zinc-900 border border-zinc-800 mb-6 overflow-x-auto flex-nowrap">
+                <TabsTrigger value="projects" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><FolderTree className="h-3.5 w-3.5 mr-1.5" />Proyectos</TabsTrigger>
+                <TabsTrigger value="roadmap" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Map className="h-3.5 w-3.5 mr-1.5" />Roadmap</TabsTrigger>
+                <TabsTrigger value="dashboard" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Dashboard</TabsTrigger>
+                <TabsTrigger value="agents" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Users className="h-3.5 w-3.5 mr-1.5" />Agentes</TabsTrigger>
+                <TabsTrigger value="waves" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Waves className="h-3.5 w-3.5 mr-1.5" />Oleadas</TabsTrigger>
+                <TabsTrigger value="memory" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><FileText className="h-3.5 w-3.5 mr-1.5" />Memoria</TabsTrigger>
+                <TabsTrigger value="mem0" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Brain className="h-3.5 w-3.5 mr-1.5" />Mem0</TabsTrigger>
+                <TabsTrigger value="specs" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><ClipboardList className="h-3.5 w-3.5 mr-1.5" />Specs</TabsTrigger>
+                <TabsTrigger value="proposals" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Target className="h-3.5 w-3.5 mr-1.5" />Propuestas</TabsTrigger>
+                <TabsTrigger value="crew" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Users className="h-3.5 w-3.5 mr-1.5" />CrewAI</TabsTrigger>
+                <TabsTrigger value="judges" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Gavel className="h-3.5 w-3.5 mr-1.5" />Judges</TabsTrigger>
               </TabsList>
 
               {/* ===== PROJECTS TAB ===== */}
@@ -448,7 +448,7 @@ export default function NexusContent() {
 
               {/* ===== CREW AI TAB ===== */}
               <TabsContent value="crew" className="space-y-4">
-                <CrewAITab projectId={project.id} />
+                <CrewAITab projectId={project.id} project={project} />
               </TabsContent>
 
               {/* ===== JUDGES TAB ===== */}

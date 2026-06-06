@@ -108,20 +108,29 @@ async function runSingleWave(
     orderBy: { importance: 'desc' },
     take: 10,
   })
-  const sharedLearningsAgents = await Promise.all(
-    sharedLearningsRaw.slice(0, 8).map(async (m) => {
-      const agent = await db.agent.findUnique({ where: { id: m.agentId } })
-      const tagsArr = m.tags.split(',')
-      const waveType = tagsArr.find((t) => ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate'].includes(t)) || 'unknown'
-      return {
-        agentName: agent?.name || 'Desconocido',
-        agentEmoji: agent?.emoji || '🤖',
-        content: m.content,
-        waveType,
-        importance: m.importance,
-      }
-    }),
-  )
+  // Batch fetch agent info for shared learnings (fix N+1)
+  const sharedAgentIds = [...new Set(sharedLearningsRaw.slice(0, 8).map(m => m.agentId))]
+  const sharedAgentsMap = new Map<string, { name: string; emoji: string; division: string }>()
+  if (sharedAgentIds.length > 0) {
+    const sharedAgents = await db.agent.findMany({
+      where: { id: { in: sharedAgentIds } },
+      select: { id: true, name: true, emoji: true, division: true },
+    })
+    for (const a of sharedAgents) sharedAgentsMap.set(a.id, a)
+  }
+
+  const sharedLearningsAgents = sharedLearningsRaw.slice(0, 8).map(m => {
+    const agent = sharedAgentsMap.get(m.agentId)
+    const tagsArr = m.tags.split(',')
+    const waveType = tagsArr.find((t) => ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate'].includes(t)) || 'unknown'
+    return {
+      agentName: agent?.name || 'Desconocido',
+      agentEmoji: agent?.emoji || '🤖',
+      content: m.content,
+      waveType,
+      importance: m.importance,
+    }
+  })
   const sharedLearningsStr = formatSharedLearnings(sharedLearningsAgents)
 
   // Pre-fetch all agent skills (batch) for Auto-Mejora
@@ -313,11 +322,36 @@ async function runSingleWave(
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const { projectId, prompt } = body
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return new Response(JSON.stringify({ error: 'JSON inválido' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  const { projectId, prompt, selectedAgentIds } = body
 
   if (!projectId || !prompt) {
-    return new Response(JSON.stringify({ error: 'Se requieren projectId y prompt' }), {
+    return new Response(JSON.stringify({ error: 'Faltan campos requeridos: projectId, prompt' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  if (typeof prompt === 'string' && prompt.length > 10000) {
+    return new Response(JSON.stringify({ error: 'El prompt es demasiado largo (máximo 10,000 caracteres)' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  if (selectedAgentIds && !Array.isArray(selectedAgentIds)) {
+    return new Response(JSON.stringify({ error: 'selectedAgentIds debe ser un array' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  if (selectedAgentIds && selectedAgentIds.length > 20) {
+    return new Response(JSON.stringify({ error: 'Máximo 20 agentes por oleada' }), {
       status: 400, headers: { 'Content-Type': 'application/json' },
     })
   }

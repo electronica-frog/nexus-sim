@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,10 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Kanban, ClipboardList, Trash2, ChevronLeft, ChevronRight, Waves, X, Loader2 } from 'lucide-react'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { SPEC_PHASES, SPEC_PHASE_CONFIG, SPEC_PRIORITY_CONFIG, WAVE_COLOR_MAP, WAVE_DOT_COLOR } from '@/components/nexus/constants'
 import type { Project, Spec } from '@/components/nexus/types'
 
@@ -50,6 +54,9 @@ export function SpecsTab({
   updateSpecPriority,
   deleteSpec,
 }: SpecsTabProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteSpecId, setDeleteSpecId] = useState<string | null>(null)
+
   return (
     <>
       <Card className="bg-zinc-900 border-zinc-800">
@@ -151,7 +158,7 @@ export function SpecsTab({
                                 </Button>
                               )}
                               <div className="flex-1" />
-                              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10" onClick={(e) => { e.stopPropagation(); deleteSpec(spec.id) }}>
+                              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10" onClick={(e) => { e.stopPropagation(); setDeleteSpecId(spec.id); setShowDeleteDialog(true) }}>
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
@@ -213,7 +220,7 @@ export function SpecsTab({
                       <SelectItem value="critical">Crítica</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10 shrink-0" onClick={(e) => { e.stopPropagation(); deleteSpec(spec.id) }}>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteSpecId(spec.id); setShowDeleteDialog(true) }}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
@@ -260,6 +267,33 @@ export function SpecsTab({
           </CardContent>
         </Card>
       )}
+
+      {/* Delete Spec Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Spec</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar esta spec? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                if (deleteSpecId) {
+                  deleteSpec(deleteSpecId)
+                  setShowDeleteDialog(false)
+                  setDeleteSpecId(null)
+                }
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

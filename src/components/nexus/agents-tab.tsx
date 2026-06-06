@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -10,6 +10,10 @@ import { Separator } from '@/components/ui/separator'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Search, Users, Filter, Handshake, Star, Trash2, Flame } from 'lucide-react'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { TRUST_COLOR, TRUST_LABEL, MEMORY_TYPE_COLORS } from '@/components/nexus/constants'
 import { AgentCard } from '@/components/nexus/agent-card'
 import type { Project, Agent, ProjectAgent, AgentSkill } from '@/components/nexus/types'
@@ -41,6 +45,9 @@ export function AgentsTab({
   setSelectedAgent,
   deleteSkill,
 }: AgentsTabProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteSkillId, setDeleteSkillId] = useState<string | null>(null)
+
   return (
     <>
       <div className="flex flex-col sm:flex-row gap-3">
@@ -126,7 +133,7 @@ export function AgentsTab({
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-[10px] text-zinc-300">{s.timesUsed}x</span>
-                                <button onClick={() => deleteSkill(s.id)} className="text-zinc-400 hover:text-red-400 transition-colors" title="Eliminar habilidad">
+                                <button onClick={() => { setDeleteSkillId(s.id); setShowDeleteDialog(true) }} className="text-zinc-400 hover:text-red-400 transition-colors" title="Eliminar habilidad">
                                   <Trash2 className="h-3 w-3" />
                                 </button>
                               </div>
@@ -167,6 +174,33 @@ export function AgentsTab({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Skill Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Skill</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro? El skill será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                if (deleteSkillId) {
+                  deleteSkill(deleteSkillId)
+                  setShowDeleteDialog(false)
+                  setDeleteSkillId(null)
+                }
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

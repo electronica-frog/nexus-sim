@@ -9,6 +9,11 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Brain, Database, Trash2, RefreshCw, Search, TrendingUp, Clock, Sparkles, Filter, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface Mem0Memory {
   id: string
@@ -54,6 +59,8 @@ export function Mem0Tab({ projectId }: { projectId: string }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [consolidating, setConsolidating] = useState(false)
   const [gcing, setGcing] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteMemoryId, setDeleteMemoryId] = useState<string | null>(null)
 
   const fetchMemories = async () => {
     if (!projectId) return
@@ -76,7 +83,10 @@ export function Mem0Tab({ projectId }: { projectId: string }) {
       const res = await fetch(`/api/nexus/memory-store?projectId=${projectId}&action=stats`)
       const data = await res.json()
       if (data.total !== undefined) setStats(data)
-    } catch {}
+    } catch (error) {
+      console.error('[fetchMem0Stats]', error)
+      toast.error('Error al cargar estadísticas de memoria')
+    }
   }
 
   useEffect(() => {
@@ -88,7 +98,10 @@ export function Mem0Tab({ projectId }: { projectId: string }) {
     try {
       await fetch(`/api/nexus/memory-store?id=${memoryId}`, { method: 'DELETE' })
       setMemories((prev) => prev.filter((m) => m.id !== memoryId))
-    } catch {}
+    } catch (error) {
+      console.error('[handleDeleteMemory]', error)
+      toast.error('Error al eliminar memoria')
+    }
   }
 
   const handleConsolidate = async () => {
@@ -101,7 +114,10 @@ export function Mem0Tab({ projectId }: { projectId: string }) {
         await fetchMemories()
         await fetchStats()
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error('[handleConsolidate]', error)
+      toast.error('Error al consolidar memorias')
+    } finally {
       setConsolidating(false)
     }
   }
@@ -116,7 +132,10 @@ export function Mem0Tab({ projectId }: { projectId: string }) {
         await fetchMemories()
         await fetchStats()
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error('[handleGC]', error)
+      toast.error('Error al ejecutar garbage collection')
+    } finally {
       setGcing(false)
     }
   }
@@ -294,7 +313,7 @@ export function Mem0Tab({ projectId }: { projectId: string }) {
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0 text-zinc-600 hover:text-red-400 shrink-0"
-                          onClick={() => handleDelete(memory.id)}
+                          onClick={(e) => { e.stopPropagation(); setDeleteMemoryId(memory.id); setShowDeleteDialog(true) }}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -307,6 +326,33 @@ export function Mem0Tab({ projectId }: { projectId: string }) {
           </div>
         </ScrollArea>
       )}
+
+      {/* Delete Memory Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Memoria</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro? Esta memoria será eliminada permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={async () => {
+                if (deleteMemoryId) {
+                  await handleDelete(deleteMemoryId)
+                  setShowDeleteDialog(false)
+                  setDeleteMemoryId(null)
+                }
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

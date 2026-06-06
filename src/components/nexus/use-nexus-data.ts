@@ -288,7 +288,10 @@ export function useNexusData() {
       if (data.collections) {
         setChromaStatus({ memories: data.collections['nexus-memories'] || 0, skills: data.collections['nexus-skills'] || 0 })
       }
-    } catch {}
+    } catch (error) {
+      console.error('[fetchChromaStatus]', error)
+      toast.error('Error al consultar estado de ChromaDB')
+    }
   }, [])
 
   const indexChroma = useCallback(async () => {
@@ -327,7 +330,10 @@ export function useNexusData() {
   useEffect(() => {
     if (!project || !dashboard) return
     const timer = setTimeout(async () => {
-      try { await fetchBenchMetrics() } catch {}
+      try { await fetchBenchMetrics() } catch (error) {
+        console.error('[fetchBenchMetrics-staggered]', error)
+        toast.error('Error al cargar métricas de benchmark')
+      }
     }, 2000)
     return () => clearTimeout(timer)
   }, [project, dashboard, fetchBenchMetrics])
@@ -336,7 +342,10 @@ export function useNexusData() {
   useEffect(() => {
     if (!project || !dashboard) return
     const timer = setTimeout(async () => {
-      try { await fetchSkills() } catch {}
+      try { await fetchSkills() } catch (error) {
+        console.error('[fetchSkills-staggered]', error)
+        toast.error('Error al cargar habilidades')
+      }
     }, 3000)
     return () => clearTimeout(timer)
   }, [project, dashboard, fetchSkills])
@@ -345,7 +354,10 @@ export function useNexusData() {
   useEffect(() => {
     if (!project || !dashboard) return
     const timer = setTimeout(async () => {
-      try { await fetchSharedLearnings() } catch {}
+      try { await fetchSharedLearnings() } catch (error) {
+        console.error('[fetchSharedLearnings-staggered]', error)
+        toast.error('Error al cargar aprendizajes compartidos')
+      }
     }, 4000)
     return () => clearTimeout(timer)
   }, [project, dashboard, fetchSharedLearnings])
@@ -520,8 +532,8 @@ export function useNexusData() {
             } else if (currentEvent === 'error') {
               toast.error(data.message || 'Error en el stream')
             }
-          } catch {
-            // ignore parse errors
+          } catch (error) {
+            console.error('[parseSSEStream] Error parsing SSE data:', error)
           }
           currentEvent = ''
         }

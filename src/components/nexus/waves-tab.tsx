@@ -174,7 +174,7 @@ export function WavesTab({
                   const isSelected = waveType === wt.value
                   return (
                     <Button key={wt.value} variant={isSelected ? 'default' : 'outline'} size="sm" onClick={() => setWaveType(wt.value)}
-                      className={isSelected ? `${WAVE_COLOR_MAP[wt.value].split(' ')[0]} bg-transparent border` : 'border-zinc-700 text-zinc-200 hover:text-zinc-200'}>
+                      className={isSelected ? `${WAVE_COLOR_MAP[wt.value].split(' ')[0]} ring-1 ring-current/30` : 'border-zinc-700 text-zinc-200 hover:text-zinc-200'}>
                       <Icon className="h-3.5 w-3.5 mr-1.5" />{wt.label}
                     </Button>
                   )

@@ -20,6 +20,7 @@ import {
   CREW_TEMPLATES, createCrewFromTemplate, getExecutableTasks,
   executeTask, formatCrewPlan, buildAgentPrompt,
 } from '@/lib/orchestrator'
+import type { Project } from '@/components/nexus/types'
 
 const ROLE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
   leader: { icon: Crown, color: 'text-amber-400', bg: 'bg-amber-500/10' },
@@ -46,7 +47,7 @@ const STRATEGY_COLORS: Record<string, string> = {
   delegative: 'text-violet-400 border-violet-500/30',
 }
 
-export function CrewAITab({ projectId }: { projectId: string }) {
+export function CrewAITab({ projectId, project }: { projectId: string; project: Project }) {
   const [crews, setCrews] = useState<OrchestratorCrew[]>([])
   const [selectedCrew, setSelectedCrew] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -55,17 +56,18 @@ export function CrewAITab({ projectId }: { projectId: string }) {
   const [executing, setExecuting] = useState(false)
   const [executionLog, setExecutionLog] = useState<string[]>([])
 
-  // Mock agents for crew creation (would come from project in production)
-  const mockAgents = [
-    { id: 'a1', name: 'Aria Chen', division: 'Research', emoji: '🔬', trustScore: 0.92 },
-    { id: 'a2', name: 'Marcus Webb', division: 'Engineering', emoji: '⚡', trustScore: 0.88 },
-    { id: 'a3', name: 'Luna Santos', division: 'Design', emoji: '🎨', trustScore: 0.85 },
-    { id: 'a4', name: 'Kai Tanaka', division: 'Strategy', emoji: '📊', trustScore: 0.90 },
-  ]
+  // Derive agents from the real project data
+  const projectAgents = project.agents.map((pa) => ({
+    id: pa.agent.agentId,
+    name: pa.agent.name,
+    division: pa.agent.division,
+    emoji: pa.agent.emoji,
+    trustScore: pa.trustScore,
+  }))
 
   const handleCreateCrew = () => {
     if (!objective.trim()) return
-    const crew = createCrewFromTemplate(templateId, projectId, mockAgents, objective)
+    const crew = createCrewFromTemplate(templateId, projectId, projectAgents, objective)
     if (crew) {
       setCrews((prev) => [crew, ...prev])
       setSelectedCrew(crew.id)

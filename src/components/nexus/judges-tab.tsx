@@ -14,6 +14,7 @@ import {
   Gavel, Play, Loader2, TrendingUp, Star, AlertTriangle,
   CheckCircle2, Target, Lightbulb, BarChart3, Clock,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface JudgeDimension {
   name: string
@@ -161,8 +162,9 @@ export function JudgesTab({ projectId }: JudgesTabProps) {
           const data = await res.json()
           setAvailableWaves((data.waves || []).filter((w: { status: string }) => w.status === 'completed'))
         }
-      } catch {
-        // ignore
+      } catch (error) {
+        console.error('[fetchAvailableWaves]', error)
+        toast.error('Error al cargar oleadas disponibles')
       }
     }
     if (projectId) fetchWaves()
