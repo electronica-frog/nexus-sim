@@ -61,3 +61,26 @@ Stage Summary:
 - Skill "nexus" v2.0 consolidada como skill maestra
 - Documenta: harness directo, API server, prompt gallery, discord, auto-improvement
 - Todo funcional: 154 agents, 18 waves, ~130 memorias, 97+ skills, prompt gallery
+---
+Task ID: 6-1
+Agent: main
+Task: Diagnosticar y reparar error client-side de NEXUS + correr harness de auto-mejora
+
+Work Log:
+- Leído page.tsx, nexus-content.tsx, nexus-client-wrapper.tsx, use-nexus-data.ts, error.tsx y 12 tabs de componentes
+- Verificado que el build compila sin errores (next build clean)
+- Verificado que la DB está sincronizada (prisma db push - already in sync)
+- Verificado schema, API routes, hooks, constants, orchestrator
+- Diagnosticado que el error client-side puede provenir de: (1) dynamic imports sin error boundary, (2) API fetches sin catch, (3) error.tsx sin detalles de debug
+- Implementado `safeDynamic()` wrapper con `.catch()` para TODOS los 13 dynamic imports (antes solo PromptsTab tenía catch)
+- Mejorado `error.tsx` para mostrar stack trace colapsable y mensaje de error detallado
+- Agregado try-catch en useEffect inicial de use-nexus-data.ts para fetchProjects/fetchProject
+- Corridas 3 olas de agentes: brainstorm #20, critique #21, synthesize #22 (total 26.6s + 23.4s + 21.5s)
+- Implementado trust-weighted auto-select para agentes (prioridad #1 de síntesis de agentes)
+- DB actualizada: 154 agentes, 22 waves, 133+ memorias, 97+ skills, 2 proyectos
+
+Stage Summary:
+- Error client-side mitigado con: safeDynamic error boundaries, error.tsx mejorado, fetch try-catch
+- 3 nuevas olas ejecutadas exitosamente (brainstorm → critique → synthesize)
+- Trust-weighted agent selection implementado: los agentes ahora se pre-seleccionan por división + trust score
+- next build limpio en todas las iteraciones

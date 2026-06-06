@@ -21,19 +21,30 @@ import {
 import { useNexusData } from '@/components/nexus/use-nexus-data'
 
 // Dynamic imports for extracted heavy tabs
+// Error fallback component for failed dynamic imports
+const TabErrorFallback = ({ name }: { name: string }) => (
+  <div className="h-96 bg-zinc-900 rounded-lg flex flex-col items-center justify-center gap-2">
+    <p className="text-zinc-500 text-sm">Error cargando {name}</p>
+    <p className="text-zinc-600 text-xs">Intenta recargar la pagina</p>
+  </div>
+)
+
+const safeDynamic = (loader: () => Promise<{ default: React.ComponentType<any> }>, name: string, opts?: { loading?: React.ReactNode; ssr?: boolean }) =>
+  dynamic(() => loader().catch(() => ({ default: () => <TabErrorFallback name={name} /> })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false, ...opts })
+
 const WaveDetailDialog = dynamic(() => import('@/components/nexus/wave-detail-dialog').then(m => ({ default: m.WaveDetailDialog })), { ssr: false })
-const DashboardTab = dynamic(() => import('@/components/nexus/dashboard-tab').then(m => ({ default: m.DashboardTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const RoadmapTab = dynamic(() => import('@/components/nexus/roadmap-tab').then(m => ({ default: m.RoadmapTab })), { loading: () => <div className="h-64 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const AgentsTab = dynamic(() => import('@/components/nexus/agents-tab').then(m => ({ default: m.AgentsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const WavesTab = dynamic(() => import('@/components/nexus/waves-tab').then(m => ({ default: m.WavesTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const MemoryTab = dynamic(() => import('@/components/nexus/memory-tab').then(m => ({ default: m.MemoryTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const SpecsTab = dynamic(() => import('@/components/nexus/specs-tab').then(m => ({ default: m.SpecsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const ProposalsTab = dynamic(() => import('@/components/nexus/proposals-tab').then(m => ({ default: m.ProposalsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const Mem0Tab = dynamic(() => import('@/components/nexus/mem0-tab').then(m => ({ default: m.Mem0Tab })), { loading: () => <div className="h-64 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const CrewAITab = dynamic(() => import('@/components/nexus/crew-ai-tab').then(m => ({ default: m.CrewAITab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const JudgesTab = dynamic(() => import('@/components/nexus/judges-tab').then(m => ({ default: m.JudgesTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const ProjectsTab = dynamic(() => import('@/components/nexus/projects-tab').then(m => ({ default: m.ProjectsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const PromptsTab = dynamic(() => import('@/components/nexus/prompts-tab').then(m => ({ default: m.PromptsTab })).catch(() => () => <div className="h-96 bg-zinc-900 rounded-lg flex items-center justify-center"><p className="text-zinc-400 text-sm">Error cargando Prompts tab</p></div>), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
+const DashboardTab = safeDynamic(() => import('@/components/nexus/dashboard-tab').then(m => ({ default: m.DashboardTab })), 'Dashboard')
+const RoadmapTab = safeDynamic(() => import('@/components/nexus/roadmap-tab').then(m => ({ default: m.RoadmapTab })), 'Roadmap', { loading: () => <div className="h-64 bg-zinc-900 rounded-lg animate-pulse" /> })
+const AgentsTab = safeDynamic(() => import('@/components/nexus/agents-tab').then(m => ({ default: m.AgentsTab })), 'Agentes')
+const WavesTab = safeDynamic(() => import('@/components/nexus/waves-tab').then(m => ({ default: m.WavesTab })), 'Oleadas')
+const MemoryTab = safeDynamic(() => import('@/components/nexus/memory-tab').then(m => ({ default: m.MemoryTab })), 'Memoria')
+const SpecsTab = safeDynamic(() => import('@/components/nexus/specs-tab').then(m => ({ default: m.SpecsTab })), 'Specs')
+const ProposalsTab = safeDynamic(() => import('@/components/nexus/proposals-tab').then(m => ({ default: m.ProposalsTab })), 'Propuestas')
+const Mem0Tab = safeDynamic(() => import('@/components/nexus/mem0-tab').then(m => ({ default: m.Mem0Tab })), 'Mem0', { loading: () => <div className="h-64 bg-zinc-900 rounded-lg animate-pulse" /> })
+const CrewAITab = safeDynamic(() => import('@/components/nexus/crew-ai-tab').then(m => ({ default: m.CrewAITab })), 'CrewAI')
+const JudgesTab = safeDynamic(() => import('@/components/nexus/judges-tab').then(m => ({ default: m.JudgesTab })), 'Judges')
+const ProjectsTab = safeDynamic(() => import('@/components/nexus/projects-tab').then(m => ({ default: m.ProjectsTab })), 'Proyectos')
+const PromptsTab = safeDynamic(() => import('@/components/nexus/prompts-tab').then(m => ({ default: m.PromptsTab })), 'Prompts')
 
 // ===== Main Component =====
 export default function NexusContent() {

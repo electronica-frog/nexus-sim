@@ -414,14 +414,22 @@ export function useNexusData() {
 
   useEffect(() => {
     fetchProjects().then(async (list) => {
-      if (list.length > 0) {
+      if (list && list.length > 0) {
         // Try localStorage for last selected project
         const savedId = typeof window !== 'undefined' ? localStorage.getItem('nexus-selected-project') : null
         const targetId = savedId && list.some(p => p.id === savedId) ? savedId : list[0].id
-        await fetchProject(targetId)
+        try {
+          await fetchProject(targetId)
+        } catch (err) {
+          console.error('[useNexusData] Error fetching project:', err)
+          setLoading(false)
+        }
       } else {
         setLoading(false)
       }
+    }).catch((err) => {
+      console.error('[useNexusData] Error fetching projects:', err)
+      setLoading(false)
     })
   }, [fetchProjects, fetchProject])
 
@@ -440,7 +448,7 @@ export function useNexusData() {
     }
   }, [activeTab, project, sharedLearnings.length, fetchSharedLearnings, fetchChromaStatus])
 
-  // Pre-select agents when wave type changes
+  // Pre-select agents when wave type changes — trust-weighted selection
   useEffect(() => {
     if (!project) return
     const divisions: Record<string, string[]> = {
@@ -451,14 +459,20 @@ export function useNexusData() {
       quality_gate: ['testing'],
     }
     if (waveType === 'quality_gate') {
+      // For QA, specifically target evidence collectors and reality checkers
       const ids = project.agents
         .filter((pa) => pa.agent.agentId.includes('reality-checker') || pa.agent.agentId.includes('evidence-collector'))
         .slice(0, 4).map((pa) => pa.id)
       setSelectedAgentIds(ids)
     } else {
       const divs = divisions[waveType] || []
-      const ids = project.agents.filter((pa) => divs.includes(pa.agent.division)).slice(0, 6).map((pa) => pa.id)
-      setSelectedAgentIds(ids)
+      // Filter by division, then sort by trust score (highest first), take top 6
+      const candidates = project.agents
+        .filter((pa) => divs.includes(pa.agent.division))
+        .sort((a, b) => (b.trustScore ?? 0.5) - (a.trustScore ?? 0.5))
+        .slice(0, 6)
+        .map((pa) => pa.id)
+      setSelectedAgentIds(candidates)
     }
   }, [waveType, project])
 
