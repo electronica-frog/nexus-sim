@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
           } else {
             filtered = allProjectAgents.filter((pa) => divisions.includes(pa.agent.division))
           }
-          if (filtered.length > 8) filtered = filtered.slice(0, 8)
+          if (filtered.length > 20) filtered = filtered.slice(0, 20)
           // Step 2: fetch full data only for filtered agents
           const filteredIds = filtered.map((pa) => pa.id)
           projectAgents = await db.projectAgent.findMany({

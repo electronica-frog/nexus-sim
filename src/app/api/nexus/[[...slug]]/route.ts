@@ -320,11 +320,11 @@ async function handleRunWave(request: NextRequest) {
     })
   } else {
     const divisionMap: Record<string, string[]> = {
-      brainstorm: ['product', 'marketing', 'design'],
-      critique: ['testing', 'specialized', 'engineering'],
-      synthesize: ['specialized', 'project-management', 'product'],
-      execute: ['engineering'],
-      quality_gate: ['testing'],
+      brainstorm: ['product', 'marketing', 'design', 'engineering', 'specialized', 'testing', 'sales', 'project-management', 'support', 'finance', 'paid-media'],
+      critique: ['testing', 'specialized', 'engineering', 'product', 'project-management'],
+      synthesize: ['specialized', 'project-management', 'product', 'engineering', 'design'],
+      execute: ['engineering', 'design', 'product'],
+      quality_gate: ['testing', 'specialized', 'engineering'],
     }
 
     const divisions = divisionMap[type] || []
@@ -344,8 +344,8 @@ async function handleRunWave(request: NextRequest) {
       filtered = allProjectAgents.filter((pa) => divisions.includes(pa.agent.division))
     }
 
-    if (filtered.length > 8) {
-      filtered = filtered.slice(0, 8)
+    if (filtered.length > 20) {
+      filtered = filtered.slice(0, 20)
     }
 
     const filteredIds = filtered.map((pa) => pa.id)

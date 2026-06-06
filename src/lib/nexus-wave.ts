@@ -78,11 +78,11 @@ export async function callLLM(data: {
 }
 
 export const DIVISION_MAP: Record<string, string[]> = {
-  brainstorm: ['product', 'marketing', 'design'],
-  critique: ['testing', 'specialized', 'engineering'],
-  synthesize: ['specialized', 'project-management', 'product'],
-  execute: ['engineering'],
-  quality_gate: ['testing'],
+  brainstorm: ['product', 'marketing', 'design', 'engineering', 'specialized', 'testing', 'sales', 'project-management', 'support', 'finance', 'paid-media'],
+  critique: ['testing', 'specialized', 'engineering', 'product', 'project-management'],
+  synthesize: ['specialized', 'project-management', 'product', 'engineering', 'design'],
+  execute: ['engineering', 'design', 'product'],
+  quality_gate: ['testing', 'specialized', 'engineering'],
 }
 
 export const VALID_WAVE_TYPES = ['brainstorm', 'critique', 'synthesize', 'execute', 'quality_gate']
