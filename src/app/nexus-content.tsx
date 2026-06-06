@@ -33,7 +33,7 @@ const Mem0Tab = dynamic(() => import('@/components/nexus/mem0-tab').then(m => ({
 const CrewAITab = dynamic(() => import('@/components/nexus/crew-ai-tab').then(m => ({ default: m.CrewAITab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const JudgesTab = dynamic(() => import('@/components/nexus/judges-tab').then(m => ({ default: m.JudgesTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const ProjectsTab = dynamic(() => import('@/components/nexus/projects-tab').then(m => ({ default: m.ProjectsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
-const PromptsTab = dynamic(() => import('@/components/nexus/prompts-tab').then(m => ({ default: m.PromptsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
+const PromptsTab = dynamic(() => import('@/components/nexus/prompts-tab').then(m => ({ default: m.PromptsTab })).catch(() => () => <div className="h-96 bg-zinc-900 rounded-lg flex items-center justify-center"><p className="text-zinc-400 text-sm">Error cargando Prompts tab</p></div>), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 
 // ===== Main Component =====
 export default function NexusContent() {
@@ -219,10 +219,9 @@ export default function NexusContent() {
       {/* CÓMO FUNCIONA ESTO Banner */}
       {showBanner && (
         <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
         >
           <div className="max-w-7xl mx-auto px-4 md:px-6 pt-4">
             <Card className="bg-gradient-to-r from-violet-950/80 via-zinc-900 to-emerald-950/60 border border-zinc-700/60 overflow-hidden">
@@ -281,7 +280,7 @@ export default function NexusContent() {
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-6 py-4 md:py-6">
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+          <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
             <Tabs value={activeTab} onValueChange={(v) => {
               setActiveTab(v)
             }}>
