@@ -2,7 +2,7 @@
  * NEXUS Sim v2 — Custom server wrapping Next.js + Socket.io
  *
  * Usage:
- *   node --max-old-space-size=256 server.mjs
+ *   node --max-old-space-size=1024 server.mjs
  *
  * Replaces `next start` with a custom HTTP server so Socket.io
  * can share the same port.  Next.js handles all page/API routes;
