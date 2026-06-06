@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator'
 import {
   Activity, Users, Waves, BarChart3, FileText, ClipboardList, Target,
   RefreshCw, Database, Loader2, BookOpen,
-  Map, Brain, Gavel, FolderTree, Plus, ChevronDown,
+  Map, Brain, Gavel, FolderTree, Plus, ChevronDown, MessageSquarePlus,
 } from 'lucide-react'
 
 // Extracted modules
@@ -33,6 +33,7 @@ const Mem0Tab = dynamic(() => import('@/components/nexus/mem0-tab').then(m => ({
 const CrewAITab = dynamic(() => import('@/components/nexus/crew-ai-tab').then(m => ({ default: m.CrewAITab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const JudgesTab = dynamic(() => import('@/components/nexus/judges-tab').then(m => ({ default: m.JudgesTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 const ProjectsTab = dynamic(() => import('@/components/nexus/projects-tab').then(m => ({ default: m.ProjectsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
+const PromptsTab = dynamic(() => import('@/components/nexus/prompts-tab').then(m => ({ default: m.PromptsTab })), { loading: () => <div className="h-96 bg-zinc-900 rounded-lg animate-pulse" />, ssr: false })
 
 // ===== Main Component =====
 export default function NexusContent() {
@@ -296,6 +297,7 @@ export default function NexusContent() {
                 <TabsTrigger value="proposals" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Target className="h-3.5 w-3.5 mr-1.5" />Propuestas</TabsTrigger>
                 <TabsTrigger value="crew" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Users className="h-3.5 w-3.5 mr-1.5" />CrewAI</TabsTrigger>
                 <TabsTrigger value="judges" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><Gavel className="h-3.5 w-3.5 mr-1.5" />Judges</TabsTrigger>
+                <TabsTrigger value="prompts" className="data-[state=active]:bg-zinc-800 min-w-fit shrink-0"><MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />Prompts</TabsTrigger>
               </TabsList>
 
               {/* ===== PROJECTS TAB ===== */}
@@ -454,6 +456,11 @@ export default function NexusContent() {
               {/* ===== JUDGES TAB ===== */}
               <TabsContent value="judges" className="space-y-4">
                 <JudgesTab projectId={project.id} />
+              </TabsContent>
+
+              {/* ===== PROMPTS TAB ===== */}
+              <TabsContent value="prompts" className="space-y-4">
+                <PromptsTab projectId={project.id} />
               </TabsContent>
 
               {/* ===== PROPOSALS TAB ===== */}
