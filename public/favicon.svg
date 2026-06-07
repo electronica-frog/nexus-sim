@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+    <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="line1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="line2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.6"/>
+    </linearGradient>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="bigglow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  
+  <!-- Ambient glow -->
+  <circle cx="256" cy="256" r="180" fill="url(#glow2)" opacity="0.3"/>
+  <circle cx="256" cy="200" r="120" fill="url(#glow1)" opacity="0.2"/>
+
+  <!-- Connection lines (neural network) -->
+  <g opacity="0.5" filter="url(#softglow)">
+    <!-- Core connections -->
+    <line x1="256" y1="180" x2="180" y2="260" stroke="url(#line1)" stroke-width="2"/>
+    <line x1="256" y1="180" x2="332" y2="260" stroke="url(#line1)" stroke-width="2"/>
+    <line x1="256" y1="180" x2="256" y2="330" stroke="url(#line2)" stroke-width="2"/>
+    <line x1="180" y1="260" x2="332" y2="260" stroke="url(#line1)" stroke-width="1.5"/>
+    <line x1="180" y1="260" x2="256" y2="330" stroke="url(#line2)" stroke-width="1.5"/>
+    <line x1="332" y1="260" x2="256" y2="330" stroke="url(#line2)" stroke-width="1.5"/>
+    
+    <!-- Outer connections -->
+    <line x1="180" y1="260" x2="130" y2="200" stroke="url(#line1)" stroke-width="1"/>
+    <line x1="180" y1="260" x2="120" y2="310" stroke="url(#line2)" stroke-width="1"/>
+    <line x1="332" y1="260" x2="382" y2="200" stroke="url(#line2)" stroke-width="1"/>
+    <line x1="332" y1="260" x2="392" y2="310" stroke="url(#line1)" stroke-width="1"/>
+    <line x1="256" y1="330" x2="200" y2="380" stroke="url(#line1)" stroke-width="1"/>
+    <line x1="256" y1="330" x2="312" y2="380" stroke="url(#line2)" stroke-width="1"/>
+    <line x1="256" y1="180" x2="190" y2="140" stroke="url(#line2)" stroke-width="1"/>
+    <line x1="256" y1="180" x2="322" y2="140" stroke="url(#line1)" stroke-width="1"/>
+    <line x1="130" y1="200" x2="190" y2="140" stroke="url(#line1)" stroke-width="0.8"/>
+    <line x1="382" y1="200" x2="322" y2="140" stroke="url(#line2)" stroke-width="0.8"/>
+    <line x1="120" y1="310" x2="200" y2="380" stroke="url(#line1)" stroke-width="0.8"/>
+    <line x1="392" y1="310" x2="312" y2="380" stroke="url(#line2)" stroke-width="0.8"/>
+  </g>
+
+  <!-- Outer nodes (smaller) -->
+  <g filter="url(#softglow)">
+    <circle cx="130" cy="200" r="10" fill="#0e7490" stroke="#06b6d4" stroke-width="1.5" opacity="0.8"/>
+    <circle cx="382" cy="200" r="10" fill="#6d28d9" stroke="#8b5cf6" stroke-width="1.5" opacity="0.8"/>
+    <circle cx="120" cy="310" r="10" fill="#6d28d9" stroke="#8b5cf6" stroke-width="1.5" opacity="0.8"/>
+    <circle cx="392" cy="310" r="10" fill="#0e7490" stroke="#06b6d4" stroke-width="1.5" opacity="0.8"/>
+    <circle cx="190" cy="140" r="8" fill="#0e7490" stroke="#06b6d4" stroke-width="1" opacity="0.7"/>
+    <circle cx="322" cy="140" r="8" fill="#6d28d9" stroke="#8b5cf6" stroke-width="1" opacity="0.7"/>
+    <circle cx="200" cy="380" r="8" fill="#6d28d9" stroke="#8b5cf6" stroke-width="1" opacity="0.7"/>
+    <circle cx="312" cy="380" r="8" fill="#0e7490" stroke="#06b6d4" stroke-width="1" opacity="0.7"/>
+  </g>
+
+  <!-- Middle nodes -->
+  <g filter="url(#bigglow)">
+    <circle cx="180" cy="260" r="18" fill="#0c4a6e" stroke="#22d3ee" stroke-width="2"/>
+    <circle cx="332" cy="260" r="18" fill="#4c1d95" stroke="#a78bfa" stroke-width="2"/>
+    <circle cx="256" cy="330" r="16" fill="#3b0764" stroke="#c084fc" stroke-width="2"/>
+  </g>
+  <g>
+    <circle cx="180" cy="260" r="6" fill="#22d3ee" opacity="0.9"/>
+    <circle cx="332" cy="260" r="6" fill="#a78bfa" opacity="0.9"/>
+    <circle cx="256" cy="330" r="5" fill="#c084fc" opacity="0.9"/>
+  </g>
+
+  <!-- Central node (top — the "brain" hub) -->
+  <circle cx="256" cy="180" r="26" fill="none" stroke="#06b6d4" stroke-width="2" opacity="0.4" filter="url(#bigglow)"/>
+  <circle cx="256" cy="180" r="22" fill="#083344" stroke="#06b6d4" stroke-width="2.5" filter="url(#bigglow)"/>
+  <circle cx="256" cy="180" r="10" fill="#06b6d4" opacity="0.9"/>
+  <circle cx="256" cy="180" r="5" fill="#cffafe"/>
+  
+  <!-- Small accent particles -->
+  <g opacity="0.4">
+    <circle cx="160" cy="220" r="2" fill="#22d3ee"/>
+    <circle cx="350" cy="220" r="2" fill="#a78bfa"/>
+    <circle cx="220" cy="360" r="1.5" fill="#c084fc"/>
+    <circle cx="290" cy="360" r="1.5" fill="#22d3ee"/>
+    <circle cx="145" cy="260" r="1.5" fill="#06b6d4"/>
+    <circle cx="367" cy="260" r="1.5" fill="#8b5cf6"/>
+    <circle cx="256" cy="120" r="2" fill="#06b6d4"/>
+    <circle cx="230" cy="160" r="1" fill="#22d3ee"/>
+    <circle cx="280" cy="160" r="1" fill="#a78bfa"/>
+  </g>
+</svg>

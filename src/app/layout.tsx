@@ -14,24 +14,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "NEXUS Sim v2 — Multi-Agent AI Simulation",
+  description: "Sistema de simulacion multi-agente con oleadas colaborativas, trust networks, memoria profunda y auto-mejora continua.",
+  keywords: ["NEXUS", "AI", "Multi-Agent", "Simulation", "Neural Network", "Auto-Improvement"],
+  authors: [{ name: "NEXUS Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "NEXUS Sim v2",
+    description: "Multi-Agent AI Simulation System with autonomous self-improvement",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "NEXUS Sim v2",
+    description: "Multi-Agent AI Simulation System",
   },
 };
 
