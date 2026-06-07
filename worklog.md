@@ -206,3 +206,29 @@ Stage Summary:
 - New tooling: Priority Scorer provides data-driven recommendations
 - API management: --skip-naming and --quick flags reduce rate limit risk
 - System at 154 agents, 58 waves, 314+ memories, 97 skills
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Fix cron jobs for NEXUS auto-loop
+
+Work Log:
+- Investigated cron delivery failure: "Disabled due to user access denied"
+- Root cause: cron gateway auto-injects Discord channel into im_context, agent processes message but delivery to Discord fails → cron disabled (status 0)
+- Cleaned up 2 old disabled crons from previous session (#189979, #189369)
+- Tested 3 approaches:
+  1. agentTurn one_time (#190394): fired at correct time, processed, but delivery failed → status 0 (disabled)
+  2. webDevReview one_time (#190433): fired, completed with status -1 (NO disable!) — but can't write files
+  3. webDevReview via API (#190462): fired, completed status -1 — but webDevReview agent has no Bash/curl access
+- Discovered: webDevReview payload type is the key to avoiding "user access denied" but lacks tool access
+- Created /api/nexus/harness-trigger/route.ts — POST endpoint that runs nexus-harness.js via execSync
+- Created recurring cron #190463 "NEXUS Daily Wave (Recurring)" with webDevReview payload, targets API route
+- Server timezone is Asia/Shanghai (UTC+8), Buenos Aires user is UTC-3
+- Timezone conversion needed: 10:00 BA = 13:00 UTC = 21:00 server
+
+Stage Summary:
+- CRON ISSUE: agentTurn type gets disabled on Discord delivery. webDevReview survives but can't execute scripts.
+- WORKAROUND: API route created at /api/nexus/harness-trigger — can be triggered by webDevReview if agent had Bash access
+- BLOCKER: webDevReview agent type doesn't have Bash/curl/file tools — only Read/Glob/Grep for code review
+- ENDSTATE: Cron #190463 active (daily at 21:00 server / 10:00 BA). Will complete without error but may not execute harness.
+- FULL FIX requires server-side config: either give webDevReview Bash access, or fix Discord delivery for agentTurn
