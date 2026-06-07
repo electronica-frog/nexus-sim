@@ -36,7 +36,8 @@ const opts = {
   project: 'cmpytm3mx004apvrh7r7b18nv',
   division: null, dryRun: false,
   save: '/home/z/my-project/download/wave-results.json',
-  status: false,
+  status: false, skipNaming: false,
+  waveName: '', waveEmoji: '🌊', wavePersonality: ''
 };
 for (let i = 0; i < args.length; i++) {
   switch (args[i]) {
@@ -48,6 +49,10 @@ for (let i = 0; i < args.length; i++) {
     case '--dry-run': opts.dryRun = true; break;
     case '--save': opts.save = args[++i]; break;
     case '--status': opts.status = true; break;
+    case '--skip-naming': opts.skipNaming = true; break;
+    case '--wave-name': opts.waveName = args[++i]; break;
+    case '--wave-emoji': opts.waveEmoji = args[++i]; break;
+    case '--wave-personality': opts.wavePersonality = args[++i]; break;
   }
 }
 
@@ -358,7 +363,17 @@ PERSONALIDAD: [1-2 palabras]`;
   if (opts.dryRun) { console.log('DRY RUN'); await db.$disconnect(); return; }
 
   // === NAMING PHASE ===
-  const waveIdentity = await generateWaveIdentity(db, agents, opts.type, opts.prompt);
+  let waveIdentity;
+  if (opts.skipNaming) {
+    waveIdentity = {
+      name: opts.waveName || `Oleada ${opts.type}`,
+      emoji: opts.waveEmoji || '🌊',
+      personality: opts.wavePersonality || 'adaptable',
+    };
+    console.log(`\n🎭 SKIP NAMING — Using provided identity: "${waveIdentity.emoji} ${waveIdentity.name}" (${waveIdentity.personality})`);
+  } else {
+    waveIdentity = await generateWaveIdentity(db, agents, opts.type, opts.prompt);
+  }
   
   const results = [];
   const startTime = Date.now();

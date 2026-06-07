@@ -39,6 +39,7 @@ const opts = {
   project: 'cmpytm3mx004apvrh7r7b18nv',
   dryRun: false,
   saveDir: '/home/z/my-project/download/ralph-loop/',
+  quick: false, // skip naming to save API calls
 };
 
 for (let i = 0; i < args.length; i++) {
@@ -48,6 +49,7 @@ for (let i = 0; i < args.length; i++) {
     case '--project': opts.project = args[++i]; break;
     case '--dry-run': opts.dryRun = true; break;
     case '--save-dir': opts.saveDir = args[++i]; break;
+    case '--quick': opts.quick = true; break;
   }
 }
 
@@ -56,7 +58,8 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 
 // Harness execution wrapper
 function runHarness(waveType, prompt, savePath, extraFlags = '') {
-  const cmd = `node /home/z/my-project/scripts/nexus-harness.js --type ${waveType} --agents ${opts.agents} --prompt "${prompt.replace(/"/g, '\\"')}" --save ${savePath} --project ${opts.project} ${extraFlags}`;
+  const quickFlag = opts.quick ? '--skip-naming' : '';
+  const cmd = `node /home/z/my-project/scripts/nexus-harness.js --type ${waveType} --agents ${opts.agents} --prompt "${prompt.replace(/"/g, '\\"')}" --save ${savePath} --project ${opts.project} ${extraFlags} ${quickFlag}`;
   console.log(`\n${'='.repeat(60)}`);
   console.log(`$ ${cmd}`);
   console.log('='.repeat(60));
