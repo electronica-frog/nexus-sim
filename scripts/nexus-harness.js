@@ -61,6 +61,10 @@ const WAVE_CONTEXT = {
 
 const WAVE_TEMPS = { brainstorm: 0.9, critique: 0.3, synthesize: 0.5, execute: 0.4, quality_gate: 0.2 };
 
+// Rate limit protection: delay between LLM calls
+const DELAY_MS = 3000; // 3 seconds between calls
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
 /**
  * PERSONALITY → BEHAVIOR ENGINE
  * Parses wave personality string and returns temperature modifier + behavior prompt.
@@ -132,9 +136,9 @@ function computePersonalityEffects(personalityStr, waveType) {
     }
   }
 
-  // Clamp temperature to valid range [0.1, 1.2]
+  // Clamp temperature to valid range [0.1, 1.0] (some APIs reject > 1.0)
   const baseTemp = WAVE_TEMPS[waveType] ?? 0.7;
-  const finalTemp = Math.max(0.1, Math.min(1.2, baseTemp + totalTempDelta));
+  const finalTemp = Math.max(0.1, Math.min(1.0, baseTemp + totalTempDelta));
 
   return {
     temperature: finalTemp,
@@ -221,7 +225,8 @@ PERSONALIDAD: [1-2 palabras]`;
 
   const proposals = [];
   
-  for (const pa of namers) {
+  for (let ni = 0; ni < namers.length; ni++) {
+    const pa = namers[ni];
     const agent = pa.agent;
     try {
       const zai = await ZAI.create();
@@ -253,6 +258,7 @@ PERSONALIDAD: [1-2 palabras]`;
       console.log(`  ${agent.emoji} ${agent.name}: Error proponiendo nombre: ${err.message}`);
       proposals.push({ name: `Oleada ${waveType}`, emoji: '🌊', personality: 'adaptable', agent: agent.name });
     }
+    if (ni < namers.length - 1) await delay(DELAY_MS); // Rate limit protection
   }
 
   // Simple consensus: pick the first proposal (they're ordered by trust score)
@@ -300,14 +306,49 @@ PERSONALIDAD: [1-2 palabras]`;
     return;
   }
 
-  // Select agents
+  // Select agents — prioritize DIVISION DIVERSITY over raw trust score
+  // Ensures waves aren't dominated by a single division
   const divisions = opts.division ? [opts.division] : (DIVISION_MAP[opts.type] || []);
-  const agents = await db.projectAgent.findMany({
-    where: { projectId: opts.project, agent: { division: { in: divisions } } },
-    include: { agent: true },
-    orderBy: { trustScore: 'desc' },
-    take: opts.agents,
-  });
+  
+  let agents;
+  if (opts.division) {
+    // Specific division requested — use trust ordering
+    agents = await db.projectAgent.findMany({
+      where: { projectId: opts.project, agent: { division: { in: divisions } } },
+      include: { agent: true },
+      orderBy: { trustScore: 'desc' },
+      take: opts.agents,
+    });
+  } else {
+    // DIVERSITY MODE: pick top agents from DIFFERENT divisions first
+    const allCandidates = await db.projectAgent.findMany({
+      where: { projectId: opts.project, agent: { division: { in: divisions } } },
+      include: { agent: true },
+      orderBy: { trustScore: 'desc' },
+    });
+    
+    // Group by division
+    const byDiv = {};
+    allCandidates.forEach(pa => {
+      const div = pa.agent.division;
+      if (!byDiv[div]) byDiv[div] = [];
+      byDiv[div].push(pa);
+    });
+    
+    // Round-robin pick from each division
+    agents = [];
+    const divKeys = Object.keys(byDiv).sort();
+    let round = 0;
+    while (agents.length < opts.agents && round < 20) {
+      for (const div of divKeys) {
+        if (agents.length >= opts.agents) break;
+        if (byDiv[div].length > round) {
+          agents.push(byDiv[div][round]);
+        }
+      }
+      round++;
+    }
+  }
 
   console.log(`=== NEXUS HARNESS v2 ===`);
   console.log(`Type: ${opts.type} | Agents: ${agents.length}`);
@@ -380,6 +421,29 @@ PERSONALIDAD: [1-2 palabras]`;
         },
       });
 
+      // === SKILL USAGE TRACKING ===
+      // Track which skills were "used" by incrementing timesUsed for agent's top skills
+      // This doesn't require an extra LLM call — it's automatic based on wave participation
+      const agentSkills = await db.agentSkill.findMany({
+        where: { projectId: opts.project, agentId: agent.id },
+        orderBy: { quality: 'desc' },
+        take: 3, // top 3 skills most likely used
+      });
+      if (agentSkills.length > 0) {
+        const skillIds = agentSkills.map(s => s.id);
+        await db.agentSkill.updateMany({
+          where: { id: { in: skillIds } },
+          data: { timesUsed: { increment: 1 } },
+        });
+        // Update quality based on wave confidence (simple: if agent was confident, skills helped)
+        if (llm.confidence > 0.7) {
+          await db.agentSkill.updateMany({
+            where: { id: { in: skillIds } },
+            data: { quality: { increment: 0.01 } }, // small quality bump
+          });
+        }
+      }
+
       await db.projectAgent.update({ where: { id: pa.id }, data: { status: 'done' } });
 
       results.push({
@@ -391,6 +455,7 @@ PERSONALIDAD: [1-2 palabras]`;
       await db.projectAgent.update({ where: { id: pa.id }, data: { status: 'failed' } });
       results.push({ agent: { name: agent.name, division: agent.division, emoji: agent.emoji }, mood: 'concerned', confidence: 0, content: `Error: ${err.message}`, error: true });
     }
+    if (i < agents.length - 1) await delay(DELAY_MS); // Rate limit protection
   }
 
   await db.wave.update({ where: { id: wave.id }, data: { status: 'completed', completedAt: new Date() } });

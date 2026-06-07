@@ -128,3 +128,26 @@ Stage Summary:
 - Waves #38-#42 all have agent-chosen identities
 - Personality engine tested and working — "audaz y rebelde" → temp 0.95, "explosiva y visionaria" → temp 1.2
 - Next: Priority 2 (Custom Skills with versioning) or Narrativa Evolutiva (Priority B from critique)
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Priority 2 — Custom Skills with Versioning + Feedback Loop
+
+Work Log:
+- Updated AgentSkill model in schema.prisma: added version (Int), parentSkillId (self-ref FK), changeLog, precision, lastFeedbackAt, feedbackScore, feedbackCount
+- Applied migration via raw SQL (SQLite ALTER TABLE ADD COLUMN) — no data loss
+- Regenerated Prisma client — all new fields accessible
+- Added skill usage tracking to harness: after each agent response, top 3 skills get timesUsed++ and quality bump if confidence > 0.7
+- Added self-referential relation for skill versioning (parentSkill/childSkills)
+- Fixed diversity mode: round-robin selection across divisions instead of trust-score-only
+- Fixed rate limiting: added 3s delay between LLM calls in both naming phase and main loop
+- Fixed naming phase bug: for (const pa of namers) didn't define loop index — changed to for (let ni = 0; ...)
+- Fixed temperature clamp: changed max from 1.2 to 1.0 (API rejects > 1.0, error code 1210)
+
+Stage Summary:
+- Wave #43 synthesize consolidated findings
+- Wave #44 failed (rate limit + temp > 1.0 API error) — led to fixes
+- Wave #45 "🌊 Mareas Mentales" (fluida y transformadora) — SUCCESS: 5 agents from 5 different divisions, 2 personality traits matched, temp 0.9→1.0, all responded
+- Priority 2 schema changes complete, skill tracking active
+- Harness now has: naming phase + personality engine + diversity mode + rate limiting + skill tracking
