@@ -79,6 +79,11 @@ model Wave {
   result      String?  // Synthesized result of the wave
   specId      String?  // Optional link to a Spec
 
+  // Wave identity — chosen by the agents themselves
+  name        String   @default("")   // e.g. "Tormenta de Cristal" instead of "Wave #35"
+  emoji       String   @default("")   // e.g. "🌩️" — chosen by participants
+  personality String   @default("")   // collective personality traits of this wave
+
   project     Project  @relation(fields: [projectId], references: [id])
   spec        Spec?    @relation(fields: [specId], references: [id])
   responses   Response[]

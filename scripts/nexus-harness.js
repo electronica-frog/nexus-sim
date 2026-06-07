@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 /**
- * NEXUS Harness — Direct agent simulation without Next.js server overhead
- * Uses z-ai-web-dev-sdk + Prisma Client (from standalone build) for fast wave execution.
+ * NEXUS Harness v2 — Direct agent simulation with self-naming waves
+ * Uses z-ai-web-dev-sdk + Prisma Client for fast wave execution.
+ *
+ * v2 additions:
+ *   - Waves choose their own name, emoji, and personality
+ *   - Agents propose names before the wave starts
+ *   - Wave identity is stored in DB
  *
  * Usage:
  *   node nexus-harness.js [options]
@@ -48,10 +53,10 @@ for (let i = 0; i < args.length; i++) {
 
 const WAVE_CONTEXT = {
   brainstorm: 'Estás en una sesión de BRAINSTORM. Tu objetivo es generar ideas creativas, proponer soluciones innovadoras, y pensar fuera de lo convencional. Sé entusiasta y proactivo.',
-  critique: 'Estás en una sesión de CRÍTICA.',
-  synthesize: 'Estás en una sesión de SÍNTESIS.',
-  execute: 'Estás en una sesión de EJECUCIÓN.',
-  quality_gate: 'Estás en un CONTROL DE CALIDAD.',
+  critique: 'Estás en una sesión de CRÍTICA. Evalúa con rigor, encuentra flaws, y rankea propuestas.',
+  synthesize: 'Estás en una sesión de SÍNTESIS. Fusiona las mejores ideas en propuestas concretas y accionables.',
+  execute: 'Estás en una sesión de EJECUCIÓN. Diseña soluciones concretas con código.',
+  quality_gate: 'Estás en un CONTROL DE CALIDAD. Valida, puntúa, y asegúra la calidad.',
 };
 
 const WAVE_TEMPS = { brainstorm: 0.9, critique: 0.3, synthesize: 0.5, execute: 0.4, quality_gate: 0.2 };
@@ -98,6 +103,77 @@ async function callLLM(agent, waveType, prompt, memories) {
   return parseMoodConf(completion.choices?.[0]?.message?.content || 'Sin respuesta.');
 }
 
+/**
+ * WAVE NAMING — Agents propose names, emoji, personality for the wave
+ * Returns { name, emoji, personality } chosen by consensus
+ */
+async function generateWaveIdentity(db, selectedAgents, waveType, prompt) {
+  console.log('\n🎭 NAMING PHASE — Agents proposing wave identity...');
+  
+  // Pick 3 diverse agents for naming (first, middle, last in trust ranking)
+  const namers = selectedAgents.length >= 3
+    ? [selectedAgents[0], selectedAgents[Math.floor(selectedAgents.length / 2)], selectedAgents[selectedAgents.length - 1]]
+    : selectedAgents.slice(0, 3);
+
+  const namingPrompt = `Estás participando en una oleada de NEXUS. Es una oleada tipo "${waveType}".
+El tema general es: "${prompt.slice(0, 100)}"
+
+Tu tarea ESPECÍFICA: Propone un NOMBRE creativo para esta oleada. No "Wave #38" sino algo con identidad.
+Incluye:
+1. Un NOMBRE (2-4 palabras, evocador, en español o inglés)
+2. Un EMOJI que represente la energía de la oleada
+3. Una PERSONALIDAD colectiva (1-2 palabras que describan el tono: ej. "audaz y curiosa", "precisa y escéptica")
+
+Responde SOLO en este formato exacto:
+NOMBRE: [tu nombre propuesto]
+EMOJI: [un emoji]
+PERSONALIDAD: [1-2 palabras]`;
+
+  const proposals = [];
+  
+  for (const pa of namers) {
+    const agent = pa.agent;
+    try {
+      const zai = await ZAI.create();
+      const completion = await zai.chat.completions.create({
+        messages: [
+          { role: 'system', content: `Eres ${agent.emoji} ${agent.name} de NEXUS. ${agent.personality.slice(0, 300)}` },
+          { role: 'user', content: namingPrompt },
+        ],
+        thinking: { type: 'disabled' },
+        temperature: 1.0, // High temp for creative names
+      });
+      
+      const raw = completion.choices?.[0]?.message?.content || '';
+      const nameMatch = raw.match(/NOMBRE:\s*(.+)/i);
+      const emojiMatch = raw.match(/EMOJI:\s*(\S+)/i);
+      const personalityMatch = raw.match(/PERSONALIDAD:\s*(.+)/i);
+      
+      const proposal = {
+        name: nameMatch ? nameMatch[1].trim().slice(0, 50) : `Oleada ${waveType}`,
+        emoji: emojiMatch ? emojiMatch[1].trim().slice(0, 4) : '🌊',
+        personality: personalityMatch ? personalityMatch[1].trim().slice(0, 60) : 'curiosa',
+        agent: agent.name,
+        raw: raw.trim(),
+      };
+      
+      proposals.push(proposal);
+      console.log(`  ${agent.emoji} ${agent.name} propone: "${proposal.emoji} ${proposal.name}" (${proposal.personality})`);
+    } catch (err) {
+      console.log(`  ${agent.emoji} ${agent.name}: Error proponiendo nombre: ${err.message}`);
+      proposals.push({ name: `Oleada ${waveType}`, emoji: '🌊', personality: 'adaptable', agent: agent.name });
+    }
+  }
+
+  // Simple consensus: pick the first proposal (they're ordered by trust score)
+  // Future: could do LLM-based voting
+  const chosen = proposals[0];
+  console.log(`\n  ✅ Identidad elegida: "${chosen.emoji} ${chosen.name}" — ${chosen.personality}`);
+  console.log(`     (propuesta por ${chosen.agent})`);
+  
+  return chosen;
+}
+
 (async () => {
   const db = new PrismaClient({
     datasources: { db: { url: 'file:/home/z/my-project/db/custom.db' } },
@@ -119,6 +195,17 @@ async function callLLM(agent, waveType, prompt, memories) {
     const divMap = {};
     divs.forEach(d => { const div = d.agent.division; divMap[div] = (divMap[div] || 0) + 1; });
     console.log('\nDivisions:', Object.entries(divMap).sort((a, b) => b[1] - a[1]).map(([d, c]) => `${d}(${c})`).join(', '));
+    
+    // Show last named waves
+    const namedWaves = await db.wave.findMany({ 
+      where: { projectId: opts.project, name: { not: '' } }, 
+      orderBy: { number: 'desc' }, take: 5 
+    });
+    if (namedWaves.length > 0) {
+      console.log('\nRecent named waves:');
+      namedWaves.forEach(w => console.log(`  #${w.number} ${w.emoji} ${w.name} (${w.personality})`));
+    }
+    
     await db.$disconnect();
     return;
   }
@@ -132,22 +219,36 @@ async function callLLM(agent, waveType, prompt, memories) {
     take: opts.agents,
   });
 
-  console.log(`=== NEXUS HARNESS ===`);
+  console.log(`=== NEXUS HARNESS v2 ===`);
   console.log(`Type: ${opts.type} | Agents: ${agents.length}`);
   agents.forEach(a => console.log(`  ${a.agent.emoji} ${a.agent.name} [${a.agent.division}] trust:${a.trustScore.toFixed(3)}`));
   console.log(`Prompt: ${opts.prompt.slice(0, 80)}...`);
 
   if (opts.dryRun) { console.log('DRY RUN'); await db.$disconnect(); return; }
 
+  // === NAMING PHASE ===
+  const waveIdentity = await generateWaveIdentity(db, agents, opts.type, opts.prompt);
+  
   const results = [];
   const startTime = Date.now();
 
-  // Create wave
+  // Create wave WITH identity
   const lastWave = await db.wave.findFirst({ where: { projectId: opts.project }, orderBy: { number: 'desc' } });
   const waveNumber = (lastWave?.number || 0) + 1;
   const wave = await db.wave.create({
-    data: { projectId: opts.project, number: waveNumber, type: opts.type, status: 'running', prompt: opts.prompt },
+    data: {
+      projectId: opts.project,
+      number: waveNumber,
+      type: opts.type,
+      status: 'running',
+      prompt: opts.prompt,
+      name: waveIdentity.name,
+      emoji: waveIdentity.emoji,
+      personality: waveIdentity.personality,
+    },
   });
+
+  console.log(`\n=== ${waveIdentity.emoji} "${waveIdentity.name}" (#${waveNumber}) ===`);
 
   for (let i = 0; i < agents.length; i++) {
     const pa = agents[i];
@@ -176,8 +277,8 @@ async function callLLM(agent, waveType, prompt, memories) {
       await db.agentMemory.create({
         data: {
           projectId: opts.project, agentId: agent.id, type: 'learning',
-          content: `[${opts.type}] #${waveNumber}: ${llm.content.slice(0, 250)}`,
-          tags: `${opts.type},wave${waveNumber}`, importance: Math.min(1, llm.confidence * 0.8),
+          content: `[${waveIdentity.name}] #${waveNumber}: ${llm.content.slice(0, 250)}`,
+          tags: `${opts.type},wave${waveNumber},${waveIdentity.name}`, importance: Math.min(1, llm.confidence * 0.8),
         },
       });
 
@@ -201,12 +302,15 @@ async function callLLM(agent, waveType, prompt, memories) {
   const moods = {};
   results.forEach(r => { moods[r.mood] = (moods[r.mood] || 0) + 1; });
 
-  console.log(`\n=== COMPLETE in ${total}s ===`);
-  console.log(`Wave #${waveNumber} | ID: ${wave.id}`);
-  console.log(`Agents: ${results.length} | Avg Conf: ${avgConf.toFixed(3)}`);
+  console.log(`\n=== ${waveIdentity.emoji} "${waveIdentity.name}" COMPLETE in ${total}s ===`);
+  console.log(`#${waveNumber} | ${opts.type} | Agents: ${results.length} | Avg Conf: ${avgConf.toFixed(3)}`);
   console.log(`Moods: ${Object.entries(moods).map(([m, c]) => `${m}(${c})`).join(', ')}`);
 
-  const output = { waveId: wave.id, waveNumber, type: opts.type, prompt: opts.prompt, projectId: opts.project, totalElapsed: parseFloat(total), avgConfidence: avgConf, moodBreakdown: moods, responses: results };
+  const output = {
+    waveId: wave.id, waveNumber, type: opts.type, prompt: opts.prompt, projectId: opts.project,
+    waveName: waveIdentity.name, waveEmoji: waveIdentity.emoji, wavePersonality: waveIdentity.personality,
+    totalElapsed: parseFloat(total), avgConfidence: avgConf, moodBreakdown: moods, responses: results,
+  };
   fs.writeFileSync(opts.save, JSON.stringify(output, null, 2));
   console.log(`Saved: ${opts.save}`);
 
