@@ -61,6 +61,92 @@ const WAVE_CONTEXT = {
 
 const WAVE_TEMPS = { brainstorm: 0.9, critique: 0.3, synthesize: 0.5, execute: 0.4, quality_gate: 0.2 };
 
+/**
+ * PERSONALITY → BEHAVIOR ENGINE
+ * Parses wave personality string and returns temperature modifier + behavior prompt.
+ * This makes wave identity affect REAL agent behavior, not just cosmetics.
+ *
+ * Personality keywords map to:
+ *   - High creativity: explosive, visionaria, fluida, salvaje, caótica, imaginativa → temp +0.15
+ *   - Low creativity (precise): precisa, escéptica, rigurosa, analítica, meticulosa → temp -0.15
+ *   - Aggressive tone: audaz, disruptiva, radical, intensa → push agents to challenge norms
+ *   - Collaborative tone: curiosa, constructiva, empática, abierta → push agents to build on others
+ *   - Reflective tone: contemplativa, profunda, filosófica → push agents to think deeper
+ */
+const PERSONALITY_MODIFIERS = {
+  // Temperature boosters (creative/chaotic)
+  explosive:   { tempDelta: 0.15, behavior: 'Sé atrevido, expande los límites, no te contengas.' },
+  visionaria:  { tempDelta: 0.12, behavior: 'Piensa en grande, visualiza el futuro, conecta ideas que otros no ven.' },
+  fluida:      { tempDelta: 0.10, behavior: 'Deja fluir tu pensamiento, conecta conceptos de forma orgánica.' },
+  salvaje:     { tempDelta: 0.18, behavior: 'Rompe las reglas, propón lo inesperado,挑战 lo establecido.' },
+  caótica:     { tempDelta: 0.20, behavior: 'Embrace the chaos, genera ideas dispersas e inesperadas.' },
+  imaginativa: { tempDelta: 0.12, behavior: 'Usa metáforas, analogías y pensamiento lateral.' },
+  innovadora:  { tempDelta: 0.10, behavior: 'Busca soluciones novedosas, piensa fuera de la caja.' },
+  creativa:    { tempDelta: 0.10, behavior: 'Genera ideas originales, evita lo obvio.' },
+  apasionada:  { tempDelta: 0.08, behavior: 'Expresa tu entusiasmo, defiende tus ideas con pasión.' },
+  // Temperature reducers (precise/rigorous)
+  precisa:     { tempDelta: -0.15, behavior: 'Sé meticuloso, cada palabra debe contar. No divagues.' },
+  escéptica:   { tempDelta: -0.12, behavior: 'Cuestiona todo, busca contra-argumentos, sé el devil\'s advocate.' },
+  rigurosa:    { tempDelta: -0.15, behavior: 'Usa datos y lógica. fundamenta cada afirmación.' },
+  analítica:   { tempDelta: -0.12, behavior: 'Descompone el problema en partes, analiza cada una.' },
+  meticulosa:  { tempDelta: -0.15, behavior: 'Presta atención al detalle, no dejes cabos sueltos.' },
+  incisiva:    { tempDelta: -0.10, behavior: 'Ve directo al grano, identifica el núcleo del problema.' },
+  perceptiva:  { tempDelta: -0.08, behavior: 'Observa patrones que otros pasan por alto, lee entre líneas.' },
+  // Behavior modifiers (tone/attitude)
+  audaz:       { tempDelta: 0.05, behavior: 'Toma posiciones fuertes, no te quedes en el medio.' },
+  disruptiva:  { tempDelta: 0.10, behavior: 'Desafía el status quo, propone alternativas radicales.' },
+  radical:     { tempDelta: 0.10, behavior: 'Ve a las raíces del problema, no parches superficiales.' },
+  intensa:     { tempDelta: 0.05, behavior: 'Sé conciso y contundente, cada oración debe impactar.' },
+  curiosa:     { tempDelta: 0.05, behavior: 'Haz preguntas, explora ángulos que no se han considerado.' },
+  constructiva:{ tempDelta: 0.00, behavior: 'Construye sobre las ideas de otros, mejora en lugar de destruir.' },
+  empática:    { tempDelta: 0.00, behavior: 'Considera todas las perspectivas, busca el punto de encuentro.' },
+  abierta:     { tempDelta: 0.05, behavior: 'Explora sin prejuicios, considera todas las opciones.' },
+  contemplativa:{ tempDelta: -0.05, behavior: 'Reflexiona antes de responder, busca la sabiduría en la profundidad.' },
+  profunda:    { tempDelta: -0.05, behavior: 'No te quedes en la superficie, profundiza en las implicaciones.' },
+  transformadora:{ tempDelta: 0.08, behavior: 'Busca cómo transformar el presente en algo radicalmente mejor.' },
+  rebelde:     { tempDelta: 0.15, behavior: 'Desafía las convenciones, cuestiona lo que todos dan por sentado.' },
+  inspiradora:  { tempDelta: 0.10, behavior: 'Motiva y eleva la conversación, busca el efecto wow.' },
+  valiente:    { tempDelta: 0.10, behavior: 'No temas proponer lo impopular si crees que es correcto.' },
+  provocadora: { tempDelta: 0.15, behavior: 'Provoca reacciones, desafía suposiciones, genera tensión creativa.' },
+  estratégica: { tempDelta: -0.05, behavior: 'Piensa a largo plazo, considera consecuencias e implicaciones.' },
+  pragmática:  { tempDelta: -0.08, behavior: 'Enfócate en lo actionable, prioriza impacto sobre teoría.' },
+  osada:       { tempDelta: 0.12, behavior: 'Atrévete a proponer lo que nadie más se atrevería.' },
+  desafiante:  { tempDelta: 0.12, behavior: 'Reta al grupo, no aceptes la respuesta fácil.' },
+  luminosa:    { tempDelta: 0.08, behavior: 'Busca iluminar el problema desde ángulos nuevos e inesperados.' },
+  introspectiva:{ tempDelta: -0.10, behavior: 'Mira hacia adentro, analiza tus propias suposiciones antes de responder.' },
+  crítica:     { tempDelta: -0.10, behavior: 'Evalúa con ojo crítico, no te conformes con la primera respuesta.' },
+  juguetona:   { tempDelta: 0.12, behavior: 'Diviértete, experimenta, no temas proponer cosas locas.' },
+  tenaz:       { tempDelta: 0.00, behavior: 'Persigue tu punto hasta el final, no te rindas fácilmente.' },
+  vigilante:   { tempDelta: -0.08, behavior: 'Mantente alerta a errores, inconsistencias y riesgos.' },
+};
+
+function computePersonalityEffects(personalityStr, waveType) {
+  const lower = personalityStr.toLowerCase();
+  let totalTempDelta = 0;
+  const behaviors = [];
+
+  for (const [keyword, mod] of Object.entries(PERSONALITY_MODIFIERS)) {
+    if (lower.includes(keyword)) {
+      totalTempDelta += mod.tempDelta;
+      behaviors.push(mod.behavior);
+    }
+  }
+
+  // Clamp temperature to valid range [0.1, 1.2]
+  const baseTemp = WAVE_TEMPS[waveType] ?? 0.7;
+  const finalTemp = Math.max(0.1, Math.min(1.2, baseTemp + totalTempDelta));
+
+  return {
+    temperature: finalTemp,
+    tempDelta: totalTempDelta,
+    baseTemp,
+    behaviorPrompt: behaviors.length > 0
+      ? `## Comportamiento de esta Oleada\n${behaviors.join('\\n')}`
+      : '',
+    matchedTraits: behaviors.length,
+  };
+}
+
 const DIVISION_MAP = {
   brainstorm: ['product', 'marketing', 'design', 'engineering', 'specialized', 'testing', 'sales', 'project-management', 'support', 'finance', 'paid-media'],
   critique: ['testing', 'specialized', 'engineering', 'product', 'project-management'],
@@ -78,13 +164,17 @@ function parseMoodConf(content) {
   return { content: content.replace(/\[MOOD:\s*\w+\]/gi, '').replace(/\[CONFIDENCE:\s*[\d.]+\]/gi, '').trim(), confidence, mood };
 }
 
-async function callLLM(agent, waveType, prompt, memories) {
+async function callLLM(agent, waveType, prompt, memories, personalityEffects) {
   const zai = await ZAI.create();
   const parts = [
     `Eres ${agent.emoji} **${agent.name}**, actuando dentro del sistema NEXUS.`,
     '', `## Tu Personalidad`, agent.personality.slice(0, 1500), '',
     `## Contexto de la Oleada`, WAVE_CONTEXT[waveType] || '',
   ];
+  // Inject wave personality behavior modifier
+  if (personalityEffects && personalityEffects.behaviorPrompt) {
+    parts.push('', personalityEffects.behaviorPrompt);
+  }
   if (memories.length > 0) parts.push('', '## Tus Memorias Previas', memories.join('\n'));
   parts.push(
     '', '## Tu Tarea',
@@ -98,7 +188,7 @@ async function callLLM(agent, waveType, prompt, memories) {
       { role: 'user', content: `El tema es:\n\n${prompt}\n\n¿Tu perspectiva como ${agent.name}?` },
     ],
     thinking: { type: 'disabled' },
-    temperature: WAVE_TEMPS[waveType] ?? 0.7,
+    temperature: personalityEffects ? personalityEffects.temperature : (WAVE_TEMPS[waveType] ?? 0.7),
   });
   return parseMoodConf(completion.choices?.[0]?.message?.content || 'Sin respuesta.');
 }
@@ -248,6 +338,14 @@ PERSONALIDAD: [1-2 palabras]`;
     },
   });
 
+  // === COMPUTE PERSONALITY EFFECTS ===
+  const personalityEffects = computePersonalityEffects(waveIdentity.personality, opts.type);
+  if (personalityEffects.tempDelta !== 0) {
+    console.log(`  🎭 Personalidad «${waveIdentity.personality}» → temp ${personalityEffects.baseTemp} → ${personalityEffects.temperature.toFixed(2)} (${personalityEffects.tempDelta > 0 ? '+' : ''}${personalityEffects.tempDelta.toFixed(2)}) | ${personalityEffects.matchedTraits} traits matched`);
+  } else {
+    console.log(`  🎭 Personalidad «${waveIdentity.personality}» → sin modificadores reconocidos (temp ${personalityEffects.temperature.toFixed(2)})`);
+  }
+
   console.log(`\n=== ${waveIdentity.emoji} "${waveIdentity.name}" (#${waveNumber}) ===`);
 
   for (let i = 0; i < agents.length; i++) {
@@ -264,7 +362,7 @@ PERSONALIDAD: [1-2 palabras]`;
 
     try {
       const t0 = Date.now();
-      const llm = await callLLM(agent, opts.type, opts.prompt, memories.map(m => `[${m.type}]: ${m.content.slice(0, 150)}`));
+      const llm = await callLLM(agent, opts.type, opts.prompt, memories.map(m => `[${m.type}]: ${m.content.slice(0, 150)}`), personalityEffects);
       const dt = ((Date.now() - t0) / 1000).toFixed(1);
 
       console.log(`  (${dt}s) ${llm.mood} conf:${llm.confidence.toFixed(2)} | ${llm.content.slice(0, 150).replace(/\n/g, ' ')}...`);
@@ -309,6 +407,7 @@ PERSONALIDAD: [1-2 palabras]`;
   const output = {
     waveId: wave.id, waveNumber, type: opts.type, prompt: opts.prompt, projectId: opts.project,
     waveName: waveIdentity.name, waveEmoji: waveIdentity.emoji, wavePersonality: waveIdentity.personality,
+    personalityEffects: { temperature: personalityEffects.temperature, tempDelta: personalityEffects.tempDelta, matchedTraits: personalityEffects.matchedTraits },
     totalElapsed: parseFloat(total), avgConfidence: avgConf, moodBreakdown: moods, responses: results,
   };
   fs.writeFileSync(opts.save, JSON.stringify(output, null, 2));
