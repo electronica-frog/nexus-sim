@@ -1,0 +1,72 @@
+{
+  "cycle": 1,
+  "maxCyclesPerDay": 8,
+  "cyclesCompletedToday": 0,
+  "lastResetDate": "2026-06-07",
+  "createdAt": "2026-06-07T04:00:00.000Z",
+  "lastCycleSummary": null,
+  "tasks": [
+    {
+      "id": "watchdog",
+      "name": "Health Check",
+      "command": "cd /home/z/my-project && node scripts/nexus-harness.js --status",
+      "type": "health",
+      "status": "completed",
+      "lastRun": "2026-06-07T13:40:38.853169Z",
+      "failCount": 0,
+      "description": "Verifica estado del sistema (agentes, waves, trust)"
+    },
+    {
+      "id": "brainstorm",
+      "name": "Brainstorm mejoras",
+      "command": "cd /home/z/my-project && NEXUS_DELAY=5000 node scripts/nexus-harness.js --type brainstorm --agents 4 --skip-naming --division engineering --save /home/z/my-project/download/nexus-cycle-CYCLE-brainstorm.json --prompt 'Analiza NEXUS Sim v2 y propone 3 mejoras concretas. Cada mejora debe tener: titulo, descripcion, impacto esperado. Prioriza mejoras de UX, performance y features faltantes.'",
+      "type": "wave",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Agentes generan propuestas de mejora"
+    },
+    {
+      "id": "critique",
+      "name": "Critica propuestas",
+      "command": "cd /home/z/my-project && NEXUS_DELAY=5000 node scripts/nexus-harness.js --type critique --agents 3 --skip-naming --division testing --save /home/z/my-project/download/nexus-cycle-CYCLE-critique.json --prompt 'Critica las propuestas de mejora. Evalu\u00e1 viabilidad, impacto, riesgo. Rankea del 1 al 5.'",
+      "type": "wave",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Otros agentes evaluan y rankean propuestas",
+      "dependsOn": "brainstorm"
+    },
+    {
+      "id": "synthesize",
+      "name": "Sintetiza resultados",
+      "command": "cd /home/z/my-project && NEXUS_DELAY=5000 node scripts/nexus-harness.js --type synthesize --agents 3 --skip-naming --division specialized --save /home/z/my-project/download/nexus-cycle-CYCLE-synthesize.json --prompt 'Tom\u00e1 las mejores propuestas rankeadas y genera un resumen ejecutivo con accionables concretos.'",
+      "type": "wave",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Fusiona mejores ideas en plan accionable",
+      "dependsOn": "critique"
+    },
+    {
+      "id": "health-score",
+      "name": "Health Score",
+      "command": "cd /home/z/my-project && node scripts/nexus-priority-scorer.js",
+      "type": "analysis",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Analiza salud del sistema, rankings, gaps"
+    },
+    {
+      "id": "export-sync",
+      "name": "Export + Sync to GitHub",
+      "command": "cd /home/z/my-project && node scripts/nexus-export.js && bash scripts/nexus-sync.sh",
+      "type": "sync",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Exporta DB a JSON y pushea a GitHub (Vercel auto-deploy)"
+    }
+  ]
+}
