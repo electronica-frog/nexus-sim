@@ -43,7 +43,17 @@ for (let i = 0; i < args.length; i++) {
   switch (args[i]) {
     case '--agents': opts.agents = parseInt(args[++i]); break;
     case '--type': opts.type = args[++i]; break;
-    case '--prompt': opts.prompt = args.slice(++i).join(' '); i = args.length; break;
+    case '--prompt': {
+      const promptParts = [];
+      i++;
+      while (i < args.length && !args[i].startsWith('--')) {
+        promptParts.push(args[i]);
+        i++;
+      }
+      opts.prompt = promptParts.join(' ');
+      i--;
+      break;
+    }
     case '--project': opts.project = args[++i]; break;
     case '--division': opts.division = args[++i]; break;
     case '--dry-run': opts.dryRun = true; break;

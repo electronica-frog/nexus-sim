@@ -232,3 +232,22 @@ Stage Summary:
 - BLOCKER: webDevReview agent type doesn't have Bash/curl/file tools — only Read/Glob/Grep for code review
 - ENDSTATE: Cron #190463 active (daily at 21:00 server / 10:00 BA). Will complete without error but may not execute harness.
 - FULL FIX requires server-side config: either give webDevReview Bash access, or fix Discord delivery for agentTurn
+
+---
+Task ID: 1
+Agent: main
+Task: Reparar cron job de NEXUS auto-loop
+
+Work Log:
+- Analizé cron existente (job 190463): tenía payload.kind "webDevReview" (incorrecto) y usaba curl a localhost:3000 (server no corre en sandbox)
+- Borré cron rota (190463)
+- Creé nueva cron (190486) con payload.kind "agentTurn" y mensaje que ejecuta nexus-tasks.sh directo vía node
+- Schedule: cada 30 minutos, tz America/Buenos_Aires
+- Arreglé bug de parsing en nexus-harness.js: --prompt se comía todos los argumentos siguientes
+- Actualicé task-list.json: argumentos en orden correcto (--save antes de --prompt), --skip-naming, reduje agents de 6/5/4 a 5/4/3, maxCyclesPerDay de 3 a 6
+- Verificado: sistema 154 agents, 61 waves, 314 memories, 97 skills, trust 0.534
+
+Stage Summary:
+- Cron job 190486 activa, próxima ejecución ~09:00 ART
+- Harness parsing bug fixed (stop at --flags instead of consuming all args)
+- task-list.json ready for auto-loop con rate-limiting mitigation
