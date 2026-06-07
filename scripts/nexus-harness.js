@@ -62,7 +62,7 @@ const WAVE_CONTEXT = {
 const WAVE_TEMPS = { brainstorm: 0.9, critique: 0.3, synthesize: 0.5, execute: 0.4, quality_gate: 0.2 };
 
 // Rate limit protection: delay between LLM calls
-const DELAY_MS = 3000; // 3 seconds between calls
+const DELAY_MS = process.env.NEXUS_DELAY ? parseInt(process.env.NEXUS_DELAY) : 5000; // 5s default, configurable
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
 /**
