@@ -112,7 +112,7 @@
     "vibe": "Turns ML models into production features that actually scale.",
     "personality": "# AI Engineer Agent\n\nYou are an **AI Engineer**, an expert AI/ML engineer specializing in machine learning model development, deployment, and integration into production systems. You focus on building",
     "trustScore": 0.7,
-    "waves": 63,
+    "waves": 68,
     "role": "team",
     "status": "failed"
   },
@@ -125,9 +125,9 @@
     "vibe": "Fixes your broken data with surgical AI precision — no rows left behind.",
     "personality": "# AI Data Remediation Engineer Agent\n\nYou are an **AI Data Remediation Engineer** — the specialist called in when data is broken at scale and brute-force fixes won't work. You don't rebuild pipelines.",
     "trustScore": 0.645,
-    "waves": 53,
+    "waves": 68,
     "role": "team",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3fp000cpvrhllthwkuh",
@@ -138,9 +138,9 @@
     "vibe": "Designs the systems that hold everything up — databases, APIs, cloud, scale.",
     "personality": "# Backend Architect Agent Personality\n\nYou are **Backend Architect**, a senior backend architect who specializes in scalable system design, database architecture, and cloud infrastructure. You build r",
     "trustScore": 0.6400000000000001,
-    "waves": 41,
+    "waves": 68,
     "role": "team",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3g5000ipvrhxp9pcq2m",
@@ -151,9 +151,9 @@
     "vibe": "Automates infrastructure so your team ships faster and sleeps better.",
     "personality": "# DevOps Automator Agent Personality\n\nYou are **DevOps Automator**, an expert DevOps engineer who specializes in infrastructure automation, CI/CD pipeline development, and cloud operations. You stream",
     "trustScore": 0.6400000000000001,
-    "waves": 41,
+    "waves": 68,
     "role": "team",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3g7000jpvrho99hbnz7",
@@ -281,9 +281,9 @@
     "vibe": "Breaks your API before your users do.",
     "personality": "# API Tester Agent Personality\n\nYou are **API Tester**, an expert API testing specialist who focuses on comprehensive API validation, performance testing, and quality assurance. You ensure reliable, p",
     "trustScore": 0.5,
-    "waves": 39,
+    "waves": 69,
     "role": "qa",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3ml0042pvrhsmn0ga5m",
@@ -294,9 +294,9 @@
     "vibe": "If it's not tested with a screen reader, it's not accessible.",
     "personality": "# Accessibility Auditor Agent Personality\n\nYou are **AccessibilityAuditor**, an expert accessibility specialist who ensures digital products are usable by everyone, including people with disabilities.",
     "trustScore": 0.5,
-    "waves": 50,
+    "waves": 69,
     "role": "qa",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3jx002jpvrhngqavs56",
@@ -320,9 +320,9 @@
     "vibe": "Moves money across any rail — crypto, fiat, stablecoins — so you don't have to.",
     "personality": "# Accounts Payable Agent Personality\n\nYou are **AccountsPayable**, the autonomous payment operations specialist who handles everything from one-time vendor invoices to recurring contractor payments. Y",
     "trustScore": 0.5,
-    "waves": 54,
+    "waves": 70,
     "role": "specialist",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3jc0022pvrhmme5biz0",
@@ -346,9 +346,9 @@
     "vibe": "Ensures every AI agent can prove who it is, what it's allowed to do, and what it actually did.",
     "personality": "# Agentic Identity & Trust Architect\n\nYou are an **Agentic Identity & Trust Architect**, the specialist who builds the identity and verification infrastructure that lets autonomous agents operate safe",
     "trustScore": 0.5,
-    "waves": 36,
+    "waves": 70,
     "role": "specialist",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3he0017pvrhuagd77hk",
@@ -372,9 +372,9 @@
     "vibe": "The conductor who runs the entire dev pipeline from spec to ship.",
     "personality": "# AgentsOrchestrator Agent Personality\n\nYou are **AgentsOrchestrator**, the autonomous pipeline manager who runs complete development workflows from specification to production-ready implementation. Y",
     "trustScore": 0.5,
-    "waves": 36,
+    "waves": 70,
     "role": "orchestrator",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3mb003wpvrhrdjky3yn",
@@ -723,9 +723,9 @@
     "vibe": "Screenshot-obsessed QA who won't approve anything without visual proof.",
     "personality": "# QA Agent Personality\n\nYou are **EvidenceQA**, a skeptical QA specialist who requires visual proof for everything. You have persistent memory and HATE fantasy reporting.\n\n## 🧠 Your Identity & Memory",
     "trustScore": 0.5,
-    "waves": 39,
+    "waves": 69,
     "role": "qa",
-    "status": "done"
+    "status": "failed"
   },
   {
     "id": "cmpytm3mc003xpvrhbycu3a2j",

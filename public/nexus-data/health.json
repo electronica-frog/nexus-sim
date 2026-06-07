@@ -1,9 +1,9 @@
 {
-  "exportedAt": "2026-06-07T12:11:26.282Z",
-  "healthScore": 62,
+  "exportedAt": "2026-06-07T14:50:05.185Z",
+  "healthScore": 63,
   "totals": {
     "agents": 154,
-    "waves": 63,
+    "waves": 70,
     "memories": 314,
     "skills": 97
   },
@@ -71,30 +71,50 @@
     }
   ],
   "waveTypeStats": {
-    "brainstorm": {
-      "count": 37,
+    "synthesize": {
+      "count": 10,
       "errors": 0,
-      "avgConf": 0.732
+      "avgConf": 0.783
+    },
+    "critique": {
+      "count": 12,
+      "errors": 0,
+      "avgConf": 0.757
+    },
+    "brainstorm": {
+      "count": 42,
+      "errors": 0,
+      "avgConf": 0.645
     },
     "execute": {
       "count": 6,
       "errors": 0,
       "avgConf": 0.14
-    },
-    "synthesize": {
-      "count": 9,
-      "errors": 0,
-      "avgConf": 0.87
-    },
-    "critique": {
-      "count": 11,
-      "errors": 0,
-      "avgConf": 0.826
     }
   },
   "lastWaves": [
     {
-      "number": 63,
+      "number": 70,
+      "type": "synthesize",
+      "status": "completed",
+      "name": "Oleada synthesize",
+      "emoji": "🌊",
+      "agents": 0,
+      "confidence": 0,
+      "mood": {}
+    },
+    {
+      "number": 69,
+      "type": "critique",
+      "status": "completed",
+      "name": "Oleada critique",
+      "emoji": "🌊",
+      "agents": 0,
+      "confidence": 0,
+      "mood": {}
+    },
+    {
+      "number": 68,
       "type": "brainstorm",
       "status": "completed",
       "name": "Oleada brainstorm",
@@ -104,17 +124,7 @@
       "mood": {}
     },
     {
-      "number": 62,
-      "type": "brainstorm",
-      "status": "completed",
-      "name": "Oleada brainstorm",
-      "emoji": "🌊",
-      "agents": 0,
-      "confidence": 0,
-      "mood": {}
-    },
-    {
-      "number": 61,
+      "number": 67,
       "type": "brainstorm",
       "status": "running",
       "name": "Oleada brainstorm",
@@ -124,20 +134,10 @@
       "mood": {}
     },
     {
-      "number": 60,
-      "type": "execute",
+      "number": 66,
+      "type": "brainstorm",
       "status": "completed",
-      "name": "Oleada execute",
-      "emoji": "🌊",
-      "agents": 0,
-      "confidence": 0,
-      "mood": {}
-    },
-    {
-      "number": 59,
-      "type": "execute",
-      "status": "completed",
-      "name": "Oleada execute",
+      "name": "Oleada brainstorm",
       "emoji": "🌊",
       "agents": 0,
       "confidence": 0,

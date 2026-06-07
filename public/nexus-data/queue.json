@@ -1,6 +1,6 @@
 {
   "cycle": 1,
-  "maxCyclesPerDay": 6,
+  "maxCyclesPerDay": 8,
   "cyclesCompletedToday": 0,
   "tasks": [
     {
@@ -10,7 +10,7 @@
       "status": "pending",
       "lastRun": null,
       "failCount": 0,
-      "description": "Verifica que la DB y el server esten vivos antes de arrancar"
+      "description": "Verifica estado del sistema (agentes, waves, trust)"
     },
     {
       "id": "brainstorm",
@@ -28,16 +28,34 @@
       "status": "pending",
       "lastRun": null,
       "failCount": 0,
-      "description": "Otros agentes evaluan y rankean las propuestas"
+      "description": "Otros agentes evaluan y rankean propuestas"
     },
     {
       "id": "synthesize",
-      "name": "Sintetiza y ejecuta",
+      "name": "Sintetiza resultados",
       "type": "wave",
       "status": "pending",
       "lastRun": null,
       "failCount": 0,
-      "description": "Fusiona las mejores ideas en un plan accionable"
+      "description": "Fusiona mejores ideas en plan accionable"
+    },
+    {
+      "id": "health-score",
+      "name": "Health Score",
+      "type": "analysis",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Analiza salud del sistema, rankings, gaps"
+    },
+    {
+      "id": "export-sync",
+      "name": "Export + Sync to GitHub",
+      "type": "sync",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Exporta DB a JSON y pushea a GitHub (Vercel auto-deploy)"
     }
   ]
 }

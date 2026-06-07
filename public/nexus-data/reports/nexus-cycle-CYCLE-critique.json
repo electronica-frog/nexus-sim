@@ -1,0 +1,55 @@
+{
+  "waveId": "cmq3we39t0001rfhnki0gw9ik",
+  "waveNumber": 69,
+  "type": "critique",
+  "prompt": "Critica las propuestas de mejora. Evaluá viabilidad, impacto, riesgo. Rankea del 1 al 5.",
+  "projectId": "cmpytm3mx004apvrh7r7b18nv",
+  "waveName": "Oleada critique",
+  "waveEmoji": "🌊",
+  "wavePersonality": "adaptable",
+  "personalityEffects": {
+    "temperature": 0.3,
+    "tempDelta": 0,
+    "matchedTraits": 0
+  },
+  "totalElapsed": 10.2,
+  "avgConfidence": 0,
+  "moodBreakdown": {
+    "concerned": 3
+  },
+  "responses": [
+    {
+      "agent": {
+        "name": "Accessibility Auditor",
+        "division": "testing",
+        "emoji": "♿"
+      },
+      "mood": "concerned",
+      "confidence": 0,
+      "content": "Error: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
+      "error": true
+    },
+    {
+      "agent": {
+        "name": "API Tester",
+        "division": "testing",
+        "emoji": "🔌"
+      },
+      "mood": "concerned",
+      "confidence": 0,
+      "content": "Error: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
+      "error": true
+    },
+    {
+      "agent": {
+        "name": "Evidence Collector",
+        "division": "testing",
+        "emoji": "📸"
+      },
+      "mood": "concerned",
+      "confidence": 0,
+      "content": "Error: API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}",
+      "error": true
+    }
+  ]
+}
