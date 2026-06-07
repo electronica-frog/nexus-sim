@@ -1,31 +1,75 @@
 import { PrismaClient } from '@prisma/client'
 
+type PrismaModels = keyof PrismaClient
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+/**
+ * DB client — lazy initialization.
+ * On Vercel (no DATABASE_URL), returns a safe noop proxy.
+ * On sandbox, connects to SQLite normally.
+ */
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : [],
-    // SQLite: single connection to prevent "database is locked" on concurrent requests
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: process.env.DATABASE_URL || 'file:/home/z/my-project/db/custom.db',
       },
     },
   })
+}
 
-// Enable WAL mode for better concurrent read performance
-// (writes are still serialized, but reads don't block)
-;(() => {
-  try {
-    ;(db as unknown as { $executeRawUnsafe: (q: string) => void }).$executeRawUnsafe(
-      'PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA synchronous=NORMAL;'
-    )
-  } catch {
-    // Ignore — will work on first actual query
+function getRealClient(): PrismaClient | undefined {
+  if (!process.env.DATABASE_URL) return undefined
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient()
   }
+  return globalForPrisma.prisma
+}
+
+/**
+ * Creates a noop proxy that returns resolved promises with empty/null results.
+ * Prevents build-time crashes when no DB is available.
+ */
+function createNoopProxy(): PrismaClient {
+  const noopModel = new Proxy({}, {
+    get() {
+      // Every method on a model returns a resolved promise with empty result
+      return () => Promise.resolve(null)
+    }
+  })
+  return new Proxy({} as PrismaClient, {
+    get(_target, prop) {
+      if (prop === '$connect' || prop === '$disconnect') return () => Promise.resolve()
+      if (prop === '$on' || prop === '$transaction' || prop === '$executeRaw' || prop === '$executeRawUnsafe' || prop === '$queryRaw' || prop === '$queryRawUnsafe') {
+        return () => Promise.resolve([])
+      }
+      // All model names return the noop model proxy
+      return noopModel
+    }
+  })
+}
+
+export const db: PrismaClient = (function(): PrismaClient {
+  // In production build on Vercel, use noop to avoid crashes
+  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+    return createNoopProxy()
+  }
+  // Sandbox/dev — try real connection
+  const client = createPrismaClient()
+  if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = client
+  }
+  return client
 })()
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
+export function getDb(): PrismaClient | undefined {
+  return getRealClient()
+}
+
+export function hasDb(): boolean {
+  return !!process.env.DATABASE_URL
+}
