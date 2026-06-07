@@ -27,6 +27,10 @@ trap "rm -f $LOCK_FILE" EXIT
 
 log "=== NEXUS SYNC START ==="
 
+# 0. Ensure correct git identity
+git config user.name "electronica-frog"
+git config user.email "electronica-frog@users.noreply.github.com"
+
 # 1. Export DB → JSON
 log "Exporting DB to JSON..."
 cd "$RUN_DIR"
