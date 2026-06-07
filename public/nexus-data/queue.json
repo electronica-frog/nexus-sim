@@ -1,0 +1,43 @@
+{
+  "cycle": 1,
+  "maxCyclesPerDay": 6,
+  "cyclesCompletedToday": 0,
+  "tasks": [
+    {
+      "id": "watchdog",
+      "name": "Health Check",
+      "type": "health",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Verifica que la DB y el server esten vivos antes de arrancar"
+    },
+    {
+      "id": "brainstorm",
+      "name": "Brainstorm mejoras",
+      "type": "wave",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Agentes generan propuestas de mejora"
+    },
+    {
+      "id": "critique",
+      "name": "Critica propuestas",
+      "type": "wave",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Otros agentes evaluan y rankean las propuestas"
+    },
+    {
+      "id": "synthesize",
+      "name": "Sintetiza y ejecuta",
+      "type": "wave",
+      "status": "pending",
+      "lastRun": null,
+      "failCount": 0,
+      "description": "Fusiona las mejores ideas en un plan accionable"
+    }
+  ]
+}

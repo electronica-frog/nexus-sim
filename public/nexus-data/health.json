@@ -1,0 +1,147 @@
+{
+  "exportedAt": "2026-06-07T12:11:26.282Z",
+  "healthScore": 62,
+  "totals": {
+    "agents": 154,
+    "waves": 63,
+    "memories": 314,
+    "skills": 97
+  },
+  "avgTrust": 0.534,
+  "divisions": [
+    {
+      "name": "specialized",
+      "count": 41,
+      "avgTrust": 0.5
+    },
+    {
+      "name": "marketing",
+      "count": 30,
+      "avgTrust": 0.5
+    },
+    {
+      "name": "engineering",
+      "count": 29,
+      "avgTrust": 0.55
+    },
+    {
+      "name": "design",
+      "count": 8,
+      "avgTrust": 0.983
+    },
+    {
+      "name": "testing",
+      "count": 8,
+      "avgTrust": 0.5
+    },
+    {
+      "name": "sales",
+      "count": 8,
+      "avgTrust": 0.5
+    },
+    {
+      "name": "paid-media",
+      "count": 7,
+      "avgTrust": 0.5
+    },
+    {
+      "name": "support",
+      "count": 6,
+      "avgTrust": 0.5
+    },
+    {
+      "name": "project-management",
+      "count": 6,
+      "avgTrust": 0.5
+    },
+    {
+      "name": "product",
+      "count": 5,
+      "avgTrust": 0.5
+    },
+    {
+      "name": "finance",
+      "count": 5,
+      "avgTrust": 0.5
+    },
+    {
+      "name": ".github",
+      "count": 1,
+      "avgTrust": 0.5
+    }
+  ],
+  "waveTypeStats": {
+    "brainstorm": {
+      "count": 37,
+      "errors": 0,
+      "avgConf": 0.732
+    },
+    "execute": {
+      "count": 6,
+      "errors": 0,
+      "avgConf": 0.14
+    },
+    "synthesize": {
+      "count": 9,
+      "errors": 0,
+      "avgConf": 0.87
+    },
+    "critique": {
+      "count": 11,
+      "errors": 0,
+      "avgConf": 0.826
+    }
+  },
+  "lastWaves": [
+    {
+      "number": 63,
+      "type": "brainstorm",
+      "status": "completed",
+      "name": "Oleada brainstorm",
+      "emoji": "🌊",
+      "agents": 0,
+      "confidence": 0,
+      "mood": {}
+    },
+    {
+      "number": 62,
+      "type": "brainstorm",
+      "status": "completed",
+      "name": "Oleada brainstorm",
+      "emoji": "🌊",
+      "agents": 0,
+      "confidence": 0,
+      "mood": {}
+    },
+    {
+      "number": 61,
+      "type": "brainstorm",
+      "status": "running",
+      "name": "Oleada brainstorm",
+      "emoji": "🌊",
+      "agents": 0,
+      "confidence": 0,
+      "mood": {}
+    },
+    {
+      "number": 60,
+      "type": "execute",
+      "status": "completed",
+      "name": "Oleada execute",
+      "emoji": "🌊",
+      "agents": 0,
+      "confidence": 0,
+      "mood": {}
+    },
+    {
+      "number": 59,
+      "type": "execute",
+      "status": "completed",
+      "name": "Oleada execute",
+      "emoji": "🌊",
+      "agents": 0,
+      "confidence": 0,
+      "mood": {}
+    }
+  ]
+}
