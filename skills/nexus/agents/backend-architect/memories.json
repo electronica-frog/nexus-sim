@@ -1,0 +1,23 @@
+{
+  "agentId": "backend-architect",
+  "version": "1.0.0",
+  "lastUpdated": "2026-06-08T12:00:00Z",
+  "memories": [
+    {
+      "id": "mem-20260608-001",
+      "type": "contribution",
+      "content": "Wave #44: Designed /agents/{id}/ structure with config/ subfolder for limits and triggers. Event-driven proactivity via webhooks + Supabase Realtime.",
+      "importance": 0.8,
+      "tags": ["architecture", "file-structure", "wave-44"],
+      "createdAt": "2026-06-08T12:00:00Z"
+    },
+    {
+      "id": "mem-20260608-002",
+      "type": "warning",
+      "content": "SQLite fragility is the biggest technical risk. 154 agents need structured persistence, not a volatile database that disappears on sandbox reset.",
+      "importance": 0.9,
+      "tags": ["persistence", "risk", "sqlite"],
+      "createdAt": "2026-06-08T12:00:00Z"
+    }
+  ]
+}

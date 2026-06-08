@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-06-08T12:00:00Z",
+  "activeAgents": [
+    {
+      "id": "ai-engineer",
+      "name": "AI Engineer",
+      "emoji": "🤖",
+      "division": "engineering",
+      "trustScore": 0.70,
+      "status": "active"
+    },
+    {
+      "id": "backend-architect",
+      "name": "Backend Architect",
+      "emoji": "🏗️",
+      "division": "engineering",
+      "trustScore": 0.64,
+      "status": "active"
+    },
+    {
+      "id": "devops-automator",
+      "name": "DevOps Automator",
+      "emoji": "⚙️",
+      "division": "engineering",
+      "trustScore": 0.64,
+      "status": "active"
+    },
+    {
+      "id": "data-remediation-engineer",
+      "name": "AI Data Remediation Engineer",
+      "emoji": "🧬",
+      "division": "engineering",
+      "trustScore": 0.645,
+      "status": "active"
+    },
+    {
+      "id": "system-observer",
+      "name": "System Observer",
+      "emoji": "👁️",
+      "division": "specialized",
+      "trustScore": 0.60,
+      "status": "active"
+    },
+    {
+      "id": "nexus-collective",
+      "name": "NEXUS Collective",
+      "emoji": "🌐",
+      "division": "system",
+      "trustScore": 1.0,
+      "status": "active",
+      "isCollective": true
+    }
+  ],
+  "totalAgents": 6,
+  "systemPhase": "bases"
+}

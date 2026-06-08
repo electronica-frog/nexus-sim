@@ -1,0 +1,39 @@
+{
+  "agentId": "nexus-collective",
+  "version": "1.0.0",
+  "lastUpdated": "2026-06-08T12:00:00Z",
+  "memories": [
+    {
+      "id": "mem-20260608-001",
+      "type": "milestone",
+      "content": "BASES DEL PROYECTO — Agent souls creados, memories.json implementado, skill botardo master diseñado. El sistema pasa de SQLite volátil a JSON persistido vía GitHub.",
+      "importance": 1.0,
+      "tags": ["milestone", "bases", "architecture", "persistence"],
+      "createdAt": "2026-06-08T12:00:00Z"
+    },
+    {
+      "id": "mem-20260608-002",
+      "type": "diagnosis",
+      "content": "Problemas identificados por agentes: echo chamber (210 memorias, 0 del usuario), trust inflado sin persistencia, DB SQLite frágil, skills sin validación, primera wave #1 nunca completada.",
+      "importance": 0.95,
+      "tags": ["diagnosis", "echo-chamber", "trust", "persistence"],
+      "createdAt": "2026-06-08T12:00:00Z"
+    },
+    {
+      "id": "mem-20260608-003",
+      "type": "research",
+      "content": "Fuentes estudiadas: Hermes Agent (SOUL.md, skills portables), Engram (FTS5 memory), SDD (specs antes de código), Mem0 (cross-session), CrewAI (role-playing), Microsoft YES AND (diversity of thought).",
+      "importance": 0.9,
+      "tags": ["research", "hermes", "engram", "sdd", "mem0", "crewai"],
+      "createdAt": "2026-06-08T12:00:00Z"
+    },
+    {
+      "id": "mem-20260608-004",
+      "type": "principle",
+      "content": "La web app es este chat. Los agentes tienen identidad, memorias persisten en GitHub, evolucionan con cada ciclo. No es una herramienta — es un colaborador.",
+      "importance": 1.0,
+      "tags": ["principle", "identity", "web-app", "collaborator"],
+      "createdAt": "2026-06-08T12:00:00Z"
+    }
+  ]
+}

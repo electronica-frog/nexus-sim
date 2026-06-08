@@ -1,7 +1,7 @@
 ---
 name: nexus
 slug: nexus
-version: 3.0.0
+version: 4.0.0
 description: >
   NEXUS Sim v2 — Sistema de simulación multi-agente. Comandos: botardo.team (correr oleadas
   con agentes AI), botardo.braindump (guardar contexto importante), botardo.volvi (reconectar
@@ -20,9 +20,12 @@ description: >
 
 > *"La web app es este chat. Los agentes tienen identidad, memorias persisten, evolucionan."*
 
-NEXUS es un sistema cooperativo de 154 agentes AI. Cada agente tiene identidad (SOUL.md),
-memorias (memories.json), y skills aprendidas. Todo corre desde Bash — no necesita
-servidor web ni Vercel.
+NEXUS es un sistema cooperativo multi-agente. Los agentes activos tienen identidad
+persistente (SOUL.md), memorias versionables (memories.json), y skills aprendidas.
+Todo corre desde Bash — no necesita servidor web ni Vercel.
+
+**Master entry point**: `botardo` — un solo comando que invoca todo el sistema.
+**Knowledge base**: `botardo-knowledge` — investigación convertida en conocimiento.
 
 ## Comandos
 
@@ -138,8 +141,14 @@ cd /home/z/my-project && node scripts/nexus-export.js && bash scripts/nexus-sync
 |---------|--------|
 | `skills/nexus/SOUL.md` | Soul del sistema NEXUS — identidad colectiva |
 | `skills/nexus/soul-templates/SOUL-TEMPLATE.md` | Template para crear SOUL.md de agentes |
-| `skills/nexus/agents/` | Directorio para SOUL.md individuales (futuro) |
-| `db/custom.db` | SQLite: 154 agentes, 211 memorias, 97 skills, 44 waves |
+| `skills/nexus/agents/` | Agentes con SOUL.md + memories.json |
+| `skills/nexus/agents/index.json` | Registro de agentes activos |
+| `skills/nexus/agents/ai-engineer/` | AI Engineer — lead architect |
+| `skills/nexus/agents/backend-architect/` | Backend Architect — data/persistence |
+| `skills/nexus/agents/devops-automator/` | DevOps Automator — automation |
+| `skills/nexus/agents/data-remediation-engineer/` | Data Remediation — integrity |
+| `skills/nexus/agents/system-observer/` | System Observer — meta-analysis |
+| `skills/nexus/agents/nexus-collective/` | Collective soul + shared memories |
 
 ### Scripts
 | Archivo | Qué hace |
@@ -155,8 +164,10 @@ cd /home/z/my-project && node scripts/nexus-export.js && bash scripts/nexus-sync
 ### Skills relacionadas
 | Skill | Comando | Qué hace |
 |-------|---------|----------|
+| `botardo` | botardo (cualquier cosa) | Master entry point — routea a todo |
 | `nexus` | botardo.team, .braindump, .volvi | Brain/cognition — pensar, guardar, reconectar |
-| `nexus-auto` | botardo.harness | Autopilot — ciclos, health, export, sync |
+| `nexus-auto` | botardo.harness, .status | Autopilot — ciclos, health, export, sync |
+| `botardo-knowledge` | botardo.research | Knowledge base — investigación persistida |
 
 ### Output
 | Archivo | Qué contiene |
@@ -184,7 +195,17 @@ Lo que estudiamos para construir NEXUS (archivos en `download/`):
 - **LLM**: z-ai-web-dev-sdk (sin servidor Next.js)
 - **Delay**: `NEXUS_DELAY=5000` para evitar rate limits (429)
 - **Timeout**: ~120s por comando
-- **Persistencia**: SQLite local + export JSON + GitHub sync
+- **Persistencia**: JSON files en agents/ + export JSON + GitHub sync
+- **Agentes activos**: 6 (con SOUL.md + memories.json propios)
 - **Oleada 5 agentes**: ~25-35s
 - **Pipeline 3 olas**: ~60-80s
 - **Ralph Loop**: ~2-3 min con `--quick`
+
+## Fase Actual: BASES
+
+El sistema completó su fase de fundación:
+1. Agent souls creados con identidad persistente
+2. memories.json por agente (versionable en GitHub)
+3. Master skill `botardo` como entry point único
+4. Knowledge base con investigación convertida en conocimiento
+5. Arquitectura clara: botardo → nexus / nexus-auto / botardo-knowledge
