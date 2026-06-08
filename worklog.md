@@ -124,3 +124,26 @@ Stage Summary:
 - Comandos botardo: .team, .braindump, .volvi, .harness todos operativos
 - nexus-auto-mejora deprecada, nexus-git-push simplificada
 - Sistema listo para uso desde Discord chat
+---
+Task ID: 2
+Agent: Super Z (main) + NEXUS agents (waves #39-44)
+Task: Diseñar LAS BASES de NEXUS — arquitectura proactiva con identidad persistente
+
+Work Log:
+- Guardado braindump del usuario en DB (primera memoria del usuario, importancia 1.0)
+- Leído download/: agentic-ai-research.md (Hermes Agent deep dive), gentleman-research.md (SDD + Engram), 15+ search JSON files
+- Identificadas fuentes clave: Hermes Agent (SOUL.md), Engram (FTS5), SDD (specs), Mem0, CrewAI, Microsoft Agent Framework
+- Wave #39: 6 specialized agents reflexionan sobre la existencia de NEXUS — "ciudadanos sin documentos"
+- Wave #40: 6 engineering agents evalúan viabilidad — "SQLite es para prototipos, no sistemas vivos"
+- Wave #41: 4 marketing agents cuentan la historia — "154 voces buscando identidad"
+- Wave #42: 3 testing agents dan respuestas crisp — "conectar a API externa YA"
+- Wave #43: 8 designers proponen arquitectura — convergencia en /agents/{id}/SOUL.md + memories.json
+- Wave #44: 5 engineers completan diseño — skills concretas, master skill pseudo-código, plan migración
+
+Stage Summary:
+- Creada estructura de archivos: skills/nexus/SOUL.md, soul-templates/, agents/
+- SKILL.md actualizado a v3.0.0 — master skill que documenta todo el sistema
+- SOUL.md colectivo creado con identidad, principios, estado actual, visión
+- Template SOUL-TEMPLATE.md para crear souls individuales
+- 6 waves ejecutadas (#39-44), 26 agentes participaron, 12 memorias nuevas acumuladas
+- Investigación de referencia catalogada: Hermes, Engram, SDD, Mem0, CrewAI, MAF
