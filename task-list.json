@@ -1,7 +1,7 @@
 {
-  "cycle": 2,
+  "cycle": 3,
   "maxCyclesPerDay": 8,
-  "cyclesCompletedToday": 1,
+  "cyclesCompletedToday": 2,
   "lastResetDate": "2026-06-08",
   "createdAt": "2026-06-08T00:00:00.000Z",
   "lastCycleSummary": null,
