@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { VALID_WAVE_TYPES, DIVISION_MAP } from '@/lib/nexus-wave'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 300 // 5 minutes (Vercel Hobby max)
+export const maxDuration = 600 // 10 minutes for 5-step pipeline
 
 function sseEvent(event: string, data: object): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`

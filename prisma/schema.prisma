@@ -79,11 +79,6 @@ model Wave {
   result      String?  // Synthesized result of the wave
   specId      String?  // Optional link to a Spec
 
-  // Wave identity — chosen by the agents themselves
-  name        String   @default("")   // e.g. "Tormenta de Cristal" instead of "Wave #35"
-  emoji       String   @default("")   // e.g. "🌩️" — chosen by participants
-  personality String   @default("")   // collective personality traits of this wave
-
   project     Project  @relation(fields: [projectId], references: [id])
   spec        Spec?    @relation(fields: [specId], references: [id])
   responses   Response[]
@@ -177,33 +172,17 @@ model MemoryStore {
 model AgentSkill {
   id           String   @id @default(cuid())
   projectId    String
-  agentId      String // links to Agent.id (not ProjectAgent)
+  agentId      String   // links to Agent.id (not ProjectAgent)
   name         String
   description  String
   sourceWaveId String?  // which wave generated this skill
-
-  // Quality & usage
   quality      Float    @default(0.5) // 0-1, improves with use
-  precision    Float?   // measured by feedback loop (0-1), separate from self-assessed quality
   timesUsed    Int      @default(0)
-
-  // Versioning
-  version      Int      @default(1)
-  parentSkillId String? // links to previous version of this skill
-  changeLog    String   @default("") // what changed between versions
-
-  // Feedback
-  lastFeedbackAt DateTime?
-  feedbackScore   Float?
-  feedbackCount   Int      @default(0)
-
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  parentSkill  AgentSkill? @relation("SkillVersioning", fields: [parentSkillId], references: [id])
-  childSkills  AgentSkill[] @relation("SkillVersioning")
 
-  @@unique([projectId, agentId, name, version])
+  @@unique([projectId, agentId, name])
 }
 
 // ===== SPECIFICATIONS (Spec-Driven Development) =====
