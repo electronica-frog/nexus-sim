@@ -103,3 +103,24 @@ Stage Summary:
 - Client-side error likely caused by server instability (crashes mid-response)
 - Fixed seed resilience and API payload optimization
 - Server needs to be kept alive with process manager
+---
+Task ID: 1
+Agent: Super Z (main)
+Task: Revisar, limpiar y validar skills de NEXUS para botardo-os
+
+Work Log:
+- Verificada estructura de skills existentes: nexus, nexus-auto, nexus-auto-mejora, nexus-git-push
+- Confirmado que scripts existen y son operativos (nexus-harness.js, nexus-run-cycle.js, nexus-ralph-loop.js, nexus-priority-scorer.js, nexus-export.js, nexus-sync.sh)
+- DB operativa: 154 agentes, 28 waves, 168 memorias, 97 skills
+- nexus-auto-mejora marcada como DEPRECATED (funcionalidad absorbida por nexus-auto)
+- nexus-git-push simplificada como utilidad (invocada por nexus-auto automáticamente)
+- Test de botardo.volvi: últimas memorias y waves mostradas correctamente
+- Test de botardo.team: brainstorm de 3 agentes en 13.3s, wave #29, conf 0.90
+- Test de botardo.harness: cola de tareas legible (ciclo 2, 6 tareas pending)
+- Task queue reseteada para ciclo fresco
+
+Stage Summary:
+- Skills de NEXUS listas para uso en botardo-os: nexus (brain) + nexus-auto (autopilot)
+- Comandos botardo: .team, .braindump, .volvi, .harness todos operativos
+- nexus-auto-mejora deprecada, nexus-git-push simplificada
+- Sistema listo para uso desde Discord chat
